@@ -1,10 +1,22 @@
 from flask import flash, render_template, url_for, redirect, request
-from hello import app, db
+from altium import app, db, svn_client
+import config
 import forms
 import datetime
 import models
 import util
 import uuid
+import pysvn
+import os
+
+def get_library_data():
+    sch = svn_client.list(config.SVN_URL + config.SVN_SCH_PATH)
+    sch = [entry[0].data['path'] for entry in sch if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith('.schlib')]
+    sch = [os.path.splitext(os.path.split(s)[1])[0] for s in sch]
+    ftpt = svn_client.list(config.SVN_URL + config.SVN_FTPT_PATH)
+    ftpt = [entry[0].data['path'] for entry in ftpt if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith('.pcblib')]
+    ftpt = [os.path.splitext(os.path.split(s)[1])[0] for s in ftpt]
+    return sch, ftpt
 
 def get_table_data(name, order_by=None):
     component = models.components[name]
@@ -30,6 +42,7 @@ def table():
 def edit():
     name = request.args['name']
     id = int(request.args['id'])
+    print get_library_data()
     Component = models.components[name]
     Form = forms.create_form(Component)
     form = Form()

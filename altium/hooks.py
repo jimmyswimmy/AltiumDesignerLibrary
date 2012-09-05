@@ -1,5 +1,5 @@
 from flask import url_for
-from hello import app
+from altium import app
 import urlparse
 from util import prettify
 

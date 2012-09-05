@@ -12,7 +12,7 @@
 </tr>
     {% for id, uuid, row in data %}
     <tr>
-        <td>
+        <td class="action-cell">
             <a href="{{url_for('delete', name=name, id=id)}}"><img src="{{static('images/cross.png')}}"></a>
             <a href="{{url_for('edit', name=name, id=id)}}"><img src="{{static('images/page_white_edit.png')}}"></a>
         </td>

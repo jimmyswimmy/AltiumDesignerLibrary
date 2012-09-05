@@ -5,3 +5,7 @@ body {
 .component-table {
     font-size: 11px;
 }
+
+.action-cell {
+    white-space: nowrap;
+}
