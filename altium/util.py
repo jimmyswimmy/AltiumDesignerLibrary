@@ -13,16 +13,18 @@ def prettify(s):
 
 
 def get_library_data():
-    import pysvn
-    svn_client = pysvn.Client()
-    sch = svn_client.list(app.config['SVN_URL'] + app.config['SVN_SCH_PATH'])
-    sch = [entry[0].data['path'] for entry in sch if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith('.schlib')]
-    sch = [os.path.splitext(os.path.split(s)[1])[0] for s in sch]
-    ftpt = svn_client.list(app.config['SVN_URL'] + app.config['SVN_FTPT_PATH'])
-    ftpt = [entry[0].data['path'] for entry in ftpt if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith('.pcblib')]
-    ftpt = [os.path.splitext(os.path.split(s)[1])[0] for s in ftpt]
-    return sch, ftpt
-
+    try:
+        import pysvn
+        svn_client = pysvn.Client()
+        sch = svn_client.list(app.config['SVN_URL'] + app.config['SVN_SCH_PATH'])
+        sch = [entry[0].data['path'] for entry in sch if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith('.schlib')]
+        sch = [os.path.splitext(os.path.split(s)[1])[0] for s in sch]
+        ftpt = svn_client.list(app.config['SVN_URL'] + app.config['SVN_FTPT_PATH'])
+        ftpt = [entry[0].data['path'] for entry in ftpt if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith('.pcblib')]
+        ftpt = [os.path.splitext(os.path.split(s)[1])[0] for s in ftpt]
+        return sch, ftpt
+    except:
+        return ([],[])
 
 class ThreadWorker(threading.Thread):
     def __init__(self, callable, *args, **kwargs):

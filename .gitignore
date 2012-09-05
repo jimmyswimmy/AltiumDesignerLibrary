@@ -3,6 +3,7 @@
 *.pyd
 *.pyo
 *~
+*.cfg
 *.bak
 *.log
 *.sqlite

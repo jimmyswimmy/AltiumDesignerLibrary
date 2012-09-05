@@ -6,7 +6,6 @@ import datetime
 import models
 import util
 import uuid
-import pysvn
 import os
 import json
 
