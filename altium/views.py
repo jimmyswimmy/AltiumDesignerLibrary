@@ -1,5 +1,5 @@
 from flask import flash, render_template, url_for, redirect, request
-from altium import app, db, svn_client
+from altium import app, db, sch, ftpt 
 import config
 import forms
 import datetime
@@ -8,15 +8,7 @@ import util
 import uuid
 import pysvn
 import os
-
-def get_library_data():
-    sch = svn_client.list(config.SVN_URL + config.SVN_SCH_PATH)
-    sch = [entry[0].data['path'] for entry in sch if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith('.schlib')]
-    sch = [os.path.splitext(os.path.split(s)[1])[0] for s in sch]
-    ftpt = svn_client.list(config.SVN_URL + config.SVN_FTPT_PATH)
-    ftpt = [entry[0].data['path'] for entry in ftpt if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith('.pcblib')]
-    ftpt = [os.path.splitext(os.path.split(s)[1])[0] for s in ftpt]
-    return sch, ftpt
+import json
 
 def get_table_data(name, order_by=None):
     component = models.components[name]
@@ -42,7 +34,6 @@ def table():
 def edit():
     name = request.args['name']
     id = int(request.args['id'])
-    print get_library_data()
     Component = models.components[name]
     Form = forms.create_form(Component)
     form = Form()
@@ -54,7 +45,7 @@ def edit():
         flash("The component was edited successfully.", "success")
         return redirect(url_for('table', name=name))
     form = Form(obj=component)
-    return render_template('edit.html', form=form)
+    return render_template('edit.html', form=form, sch=sch, ftpt=ftpt)
 
 @app.route('/new', methods=['GET','POST'])
 def new():
@@ -70,7 +61,7 @@ def new():
         db.session.commit()
         flash("The new component was created successfully.", "success")
         return redirect(url_for('table', name=name))
-    return render_template('edit.html', form=form)
+    return render_template('edit.html', form=form, sch=sch, ftpt=ftpt)
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
