@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
 <p>
-<a class="btn" href="{{url_for('new', name=name)}}"><i class="icon-plus"></i> New Component</a>
+<a class="btn" href="{{url_for('new', name=name)}}"><i class="icon-plus"></i> New {{prettify(name)}}</a>
 </p>
 <table class="table table-bordered table-striped component-table">
     <tr>
         <th>&nbsp;</th>
-        {% for order_by, header, pretty_header in headers %}
+        {% for order_by, header in headers %}
         <th>
 
             <a href="{{url_for('table', name=name, order_by=header )}}">
             	{% if order_by %}
             	<b class="caret"></b>
             	{% endif %}
-            	{{ pretty_header }}
+            	{{ prettify(header) }}
             </a>
         </th>
         {% endfor %}
@@ -23,6 +23,8 @@
         <td class="action-cell">
             <a href="{{url_for('delete', name=name, id=id)}}"><img src="{{static('images/cross.png')}}" title="Delete" alt="Delete"></a>
             <a href="{{url_for('edit', name=name, id=id)}}"><img src="{{static('images/page_white_edit.png')}}" title="Edit" alt="Edit"></a>
+            <a href="{{url_for('new', name=name, template=id)}}"><img src="{{static('images/page_white_copy.png')}}" title="Duplicate" alt="Duplicate"></a>
+
         </td>
         {% for cell in row %}
         <td>{{cell}}</td>

@@ -17,7 +17,7 @@ def get_table_data(name, order_by=None):
     for field in models.HIDDEN_FIELDS:
         properties.remove(field)
     print properties
-    headers = [(True if prop in order_by else False, prop, util.prettify(prop)) for prop in properties]
+    headers = [(True if prop in order_by else False, prop) for prop in properties]
     rows = [(x.id, x.uuid, [getattr(x, field) for field in properties]) for x in component.query.order_by(' '.join(order_by)).all()]
     return headers, rows
 
@@ -56,7 +56,15 @@ def new():
     name = request.args['name']
     Component = models.components[name]
     Form = forms.create_form(Component)
-    form = Form()
+
+    # Pop the form with template data if this is a duplicate
+    template = request.args.get('template', None)        
+    if template:
+        template_component = Component.query.get(int(template))
+        form = Form(obj=template_component)
+    else:
+        form = Form()
+
     if form.validate_on_submit():
         component = Component()
         form.populate_obj(component)
