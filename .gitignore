@@ -9,3 +9,5 @@
 *.sqlite
 *.sqlite3
 *.swp
+.project
+.pydevproject

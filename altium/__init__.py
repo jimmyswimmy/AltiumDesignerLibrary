@@ -3,7 +3,10 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config.from_object('altium.config')
-app.config.from_envvar('ALTIUM_DESIGNER_LIBRARY_SETTINGS')
+try:
+    app.config.from_envvar('ALTIUM_DESIGNER_LIBRARY_SETTINGS')
+except:
+    pass
 
 db = SQLAlchemy(app)
 
