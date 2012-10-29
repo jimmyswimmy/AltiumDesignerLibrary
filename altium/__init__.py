@@ -11,7 +11,7 @@ except:
 db = SQLAlchemy(app)
 
 import util
-sch, ftpt = util.get_library_data()
+sym, ftpt = util.get_library_data()
 
 import hooks
 import models

@@ -1,5 +1,5 @@
 from flask import flash, render_template, url_for, redirect, request
-from altium import app, db, sch, ftpt
+from altium import app, db, sym, ftpt
 import forms
 import models
 import util
@@ -24,6 +24,8 @@ def get_table_data(name, order_by=None):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     tables = db.Model.metadata.tables.keys()
+    if not sym and not ftpt:
+        flash("There is a problem accessing the SVN repositories.  Check SVN settings.", "warning")
     return render_template('index.html', tables=tables)
 
 @app.route('/table', methods=['GET','POST'])
@@ -49,7 +51,7 @@ def edit():
         flash("The component was edited successfully.", "success")
         return redirect(url_for('table', name=name))
     form = Form(obj=component)
-    return render_template('edit.html',  tables = db.Model.metadata.tables.keys(), form=form, sch=sch, ftpt=ftpt)
+    return render_template('edit.html',  tables = db.Model.metadata.tables.keys(), form=form, sch=sym, ftpt=ftpt)
 
 @app.route('/new', methods=['GET','POST'])
 def new():
@@ -73,7 +75,7 @@ def new():
         db.session.commit()
         flash("The new component was created successfully.", "success")
         return redirect(url_for('table', name=name))
-    return render_template('edit.html',  tables = db.Model.metadata.tables.keys(), form=form, sch=sch, ftpt=ftpt)
+    return render_template('edit.html',  tables = db.Model.metadata.tables.keys(), form=form, sch=sym, ftpt=ftpt)
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
