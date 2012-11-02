@@ -1,9 +1,10 @@
 from flask import flash, render_template, url_for, redirect, request
-from altium import app, db, sym, ftpt
+from altium import app, db, library
 import forms
 import models
-import util
 import uuid
+import util
+
 
 def get_table_data(name, order_by=None):
     '''
@@ -16,15 +17,24 @@ def get_table_data(name, order_by=None):
     order_by = order_by or []
     for field in models.HIDDEN_FIELDS:
         properties.remove(field)
-    print properties
     headers = [(True if prop in order_by else False, prop) for prop in properties]
     rows = [(x.id, x.uuid, [getattr(x, field) for field in properties]) for x in component.query.order_by(' '.join(order_by)).all()]
     return headers, rows
 
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    tables = db.Model.metadata.tables.keys()
+    form = forms.create_prefs_form()
+    if form.validate_on_submit():
+        form.populate_obj(util.AttributeWrapper(app.config))
+        flash("Your settings have been saved.", "success")
+        return redirect(request.referrer)
+    return render_template('settings.html', form=form, tables=tables)
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     tables = db.Model.metadata.tables.keys()
-    if not sym and not ftpt:
+    if not library.sym and not library.ftpt:
         flash("There is a problem accessing the SVN repositories.  Check SVN settings.", "warning")
     return render_template('index.html', tables=tables)
 
@@ -33,7 +43,6 @@ def table():
     name = request.args['name']
     order_by = request.args.get('order_by', '')
     headers, rows = get_table_data(name, order_by=[order_by])
-    print headers
     return render_template('table.html', tables = db.Model.metadata.tables.keys(), headers=headers , data=rows, name=name)
 
 @app.route('/edit', methods=['GET','POST'])
@@ -41,7 +50,7 @@ def edit():
     name = request.args['name']
     _id = int(request.args['id'])
     Component = models.components[name]
-    Form = forms.create_form(Component)
+    Form = forms.create_component_form(Component)
     form = Form()
     component = Component.query.get(_id)
     if form.validate_on_submit():
@@ -51,13 +60,13 @@ def edit():
         flash("The component was edited successfully.", "success")
         return redirect(url_for('table', name=name))
     form = Form(obj=component)
-    return render_template('edit.html',  tables = db.Model.metadata.tables.keys(), form=form, sch=sym, ftpt=ftpt)
+    return render_template('edit.html',  tables = db.Model.metadata.tables.keys(), form=form, sch=library.sym, ftpt=library.ftpt)
 
 @app.route('/new', methods=['GET','POST'])
 def new():
     name = request.args['name']
     Component = models.components[name]
-    Form = forms.create_form(Component)
+    Form = forms.create_component_form(Component)
 
     # Pop the form with template data if this is a duplicate
     template = request.args.get('template', None)        
@@ -75,7 +84,7 @@ def new():
         db.session.commit()
         flash("The new component was created successfully.", "success")
         return redirect(url_for('table', name=name))
-    return render_template('edit.html',  tables = db.Model.metadata.tables.keys(), form=form, sch=sym, ftpt=ftpt)
+    return render_template('edit.html',  tables = db.Model.metadata.tables.keys(), form=form, sch=library.sym, ftpt=library.ftpt)
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():

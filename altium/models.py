@@ -1,4 +1,3 @@
-from sqlalchemy import *
 from altium import db
 HIDDEN_FIELDS = ('uuid', 'id')
 # Models are auto-generated, because our database schema is really stupid-simple
