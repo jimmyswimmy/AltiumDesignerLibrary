@@ -1,4 +1,4 @@
-from flask import flash, render_template, url_for, redirect, request
+from flask import flash, render_template, url_for, redirect, request, make_response
 from altium import app, db, library, CONFIG_FILE
 import forms
 import models
@@ -99,3 +99,21 @@ def delete():
     db.session.delete(component)
     db.session.commit()
     return redirect(url_for('table', name=name))
+
+@app.route('/get_file', methods=['GET'])
+def get_file():
+    name = request.args['name']
+    type = request.args['type']
+    if type == 'symbol':
+        filename, file_data = library.get_symbol_file(name)
+    elif type == 'footprint':
+        filename, file_data = library.get_footprint_file(name)
+    else:
+        return redirect(request.referrer)
+    response = make_response(file_data)
+    response.headers['Content-Type'] = 'application/octet-stream'
+    response.headers['Content-Disposition'] = 'attachment; filename=%s' % filename
+    return response
+    
+        
+    

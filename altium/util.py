@@ -59,7 +59,8 @@ class SVNLibrary(ThreadWorker):
         super(SVNLibrary, self).__init__(self.continuous_update, update_rate)
         self.sym_index = {}
         self.ftpt_index = {}
-        self.start()
+        if update_rate:
+            self.start()
     
     @property
     def sym(self):
@@ -105,10 +106,14 @@ class SVNLibrary(ThreadWorker):
     def get_symbol_file(self, name):
         import pysvn
         svn_client = pysvn.Client()
-        return svn_client.cat(self.sym_index[name])
+        fullpath = self.sym_index[name]
+        filename = fullpath.split('/')[-1]
+        return filename, svn_client.cat(fullpath)
     
     def get_footprint_file(self, name):
         import pysvn
         svn_client = pysvn.Client()
-        return svn_client.cat(self.ftpt_index[name])
+        fullpath = self.ftpt_index[name]
+        filename = fullpath.split('/')[-1]
+        return filename, svn_client.cat(fullpath)
         
