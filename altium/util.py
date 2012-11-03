@@ -1,7 +1,7 @@
 import threading
-from altium import app
 import os
 import time
+import datetime
 
 # Replacements for things like acronyms that don't prettify() well
 PRETTYDICT = {  'esr' : 'ESR',
@@ -9,10 +9,17 @@ PRETTYDICT = {  'esr' : 'ESR',
                 'bjt' : 'BJT',
                 'mosfet' : 'MOSFET',
                 'ic' : 'IC'}
-
 def prettify(s):
     words = s.lower().replace('_', ' ').split()
     return ' '.join([PRETTYDICT.get(word, word.capitalize()) for word in words])
+
+def save_config(config, filename):
+    with open(filename, 'w') as fp:
+        for key, value in config.items():
+            # Config values must be basic types, timedeltas not allowed
+            if isinstance(value, datetime.timedelta):
+                value = int(value.total_seconds())
+            fp.write('%s = %s\n' % (key, repr(value)))
 
 class AttributeWrapper(object):    
     def __init__(self, z):
@@ -31,16 +38,16 @@ class AttributeWrapper(object):
             return setattr(self.data, name, value)
         
 class ThreadWorker(threading.Thread):
-    def __init__(self, callable, *args, **kwargs):
+    def __init__(self, func, *args, **kwargs):
         super(ThreadWorker, self).__init__()
-        self.callable = callable
+        self.func = func
         self.args = args
         self.kwargs = kwargs
         self.setDaemon(True)
 
     def run(self):
         try:
-            self.callable(*self.args, **self.kwargs)
+            self.func(*self.args, **self.kwargs)
         except Exception, e:
             print "Exception in ThreadWorker: %s" % e
 
@@ -55,20 +62,30 @@ class SVNLibrary(ThreadWorker):
         while True:
             self.update()
             time.sleep(update_rate)
-            
-    def update(self):
+    
+    def check(self):
+        try:
+            self.update(silent=False)
+            return None
+        except Exception, e:
+            return str(e)
+        
+    def update(self, silent=True):
+        from altium import app
         url = app.config['ALTIUM_SVN_URL']
         sym_path = app.config['ALTIUM_SYM_PATH']
         ftpt_path = app.config['ALTIUM_FTPT_PATH']
         try:
             import pysvn
             svn_client = pysvn.Client()
-            sch = svn_client.list(url + sym_path)
-            sch = [entry[0].data['path'] for entry in sch if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith('.schlib')]
-            sch = [os.path.splitext(os.path.split(s)[1])[0] for s in sch]
-            ftpt = svn_client.list(url + ftpt_path)
-            ftpt = [entry[0].data['path'] for entry in ftpt if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith('.pcblib')]
-            ftpt = [os.path.splitext(os.path.split(s)[1])[0] for s in ftpt]
-            self.sym, self.ftpt = sch, ftpt
+            retval = []
+            for path, ext in [(sym_path, '.schlib'), (ftpt_path, '.pcblib')]:
+                l = svn_client.list(url + path)
+                l = [entry[0].data['path'] for entry in l if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith(ext)]
+                l = [os.path.splitext(os.path.split(s)[1])[0] for s in l]
+                retval.append(l)
+            self.sym, self.ftpt = retval
         except Exception, e:
             self.sym, self.ftpt =  ([],[])
+            if not silent:
+                raise e

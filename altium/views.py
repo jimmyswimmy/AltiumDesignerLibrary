@@ -1,5 +1,5 @@
 from flask import flash, render_template, url_for, redirect, request
-from altium import app, db, library
+from altium import app, db, library, CONFIG_FILE
 import forms
 import models
 import uuid
@@ -27,6 +27,10 @@ def settings():
     form = forms.create_prefs_form()
     if form.validate_on_submit():
         form.populate_obj(util.AttributeWrapper(app.config))
+        util.save_config(app.config, CONFIG_FILE)
+        warning = library.check()
+        if warning:
+            flash(warning, "error")
         flash("Your settings have been saved.", "success")
         return redirect(request.referrer)
     return render_template('settings.html', form=form, tables=tables)
