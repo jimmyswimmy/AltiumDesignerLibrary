@@ -13,7 +13,6 @@ util.save_config(app.config, CONFIG_FILE)
 # Initial check of the library to establish SVN data
 library = util.SVNLibrary()
 library.check()
-
 db = SQLAlchemy(app)
 
     

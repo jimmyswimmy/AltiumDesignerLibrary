@@ -21,6 +21,9 @@ def save_config(config, filename):
                 value = int(value.total_seconds())
             fp.write('%s = %s\n' % (key, repr(value)))
 
+def svnjoin(*parts):
+    return '/'.join([part.strip('/') for part in parts])
+
 class AttributeWrapper(object):    
     def __init__(self, z):
         object.__setattr__(self, 'data', z)
@@ -54,9 +57,17 @@ class ThreadWorker(threading.Thread):
 class SVNLibrary(ThreadWorker):
     def __init__(self, update_rate=5.0):
         super(SVNLibrary, self).__init__(self.continuous_update, update_rate)
-        self.sym = []
-        self.ftpt = []
+        self.sym_index = {}
+        self.ftpt_index = {}
         self.start()
+    
+    @property
+    def sym(self):
+        return self.sym_index.keys()
+    
+    @property
+    def ftpt(self):
+        return self.ftpt_index.keys()
     
     def continuous_update(self, update_rate):
         while True:
@@ -78,14 +89,26 @@ class SVNLibrary(ThreadWorker):
         try:
             import pysvn
             svn_client = pysvn.Client()
-            retval = []
+            indices = []
             for path, ext in [(sym_path, '.schlib'), (ftpt_path, '.pcblib')]:
-                l = svn_client.list(url + path)
-                l = [entry[0].data['path'] for entry in l if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith(ext)]
-                l = [os.path.splitext(os.path.split(s)[1])[0] for s in l]
-                retval.append(l)
-            self.sym, self.ftpt = retval
+                all_paths = svn_client.list(url + path)
+                file_paths = [entry[0].data['path'] for entry in all_paths if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith(ext)]
+                file_names = [os.path.split(s)[1] for s in file_paths]
+                base_names = [os.path.splitext(s)[0] for s in file_names]
+                indices.append(dict(zip(base_names, file_paths)))
+            self.sym_index, self.ftpt_index = indices
         except Exception, e:
-            self.sym, self.ftpt =  ([],[])
+            self.sym_index, self.ftpt_index = ({},{})
             if not silent:
                 raise e
+            
+    def get_symbol_file(self, name):
+        import pysvn
+        svn_client = pysvn.Client()
+        return svn_client.cat(self.sym_index[name])
+    
+    def get_footprint_file(self, name):
+        import pysvn
+        svn_client = pysvn.Client()
+        return svn_client.cat(self.ftpt_index[name])
+        
