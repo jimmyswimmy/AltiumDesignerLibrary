@@ -14,6 +14,8 @@ class PrefsForm(Form):
     ALTIUM_SYM_PATH = TextField(u'SchLib Path', validators=[validators.required()])
     ALTIUM_FTPT_PATH = TextField(u'PcbLib Path', validators=[validators.required()])
     
+    SQLALCHEMY_DATABASE_URI = TextField(u'Database URI', validators=[validators.required()])
+    
 def create_prefs_form():
     from altium import app
     return PrefsForm(obj=util.AttributeWrapper(app.config))
