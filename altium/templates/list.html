@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<p>
+	<ul>
+	{% for name in names %}
+	<li><a href="{{url_for('get_file', name=name, type=type)}}">{{name}}</a></li>
+	{% endfor %}
+	</ul>
+</p>
+
+{% endblock %}
+

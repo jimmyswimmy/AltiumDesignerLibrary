@@ -100,13 +100,21 @@ def delete():
     db.session.commit()
     return redirect(url_for('table', name=name))
 
+@app.route('/symbols', methods=['GET'])
+def symbols():
+    return render_template('list.html', tables = db.Model.metadata.tables.keys(), names=library.sym, type='symbol')
+
+@app.route('/footprints', methods=['GET'])
+def footprints():
+    return render_template('list.html', tables = db.Model.metadata.tables.keys(), names=library.ftpt, type='footprint')
+
 @app.route('/get_file', methods=['GET'])
 def get_file():
     name = request.args['name']
-    type = request.args['type']
-    if type == 'symbol':
+    _type = request.args['type']
+    if _type == 'symbol':
         filename, file_data = library.get_symbol_file(name)
-    elif type == 'footprint':
+    elif _type == 'footprint':
         filename, file_data = library.get_footprint_file(name)
     else:
         return redirect(request.referrer)
