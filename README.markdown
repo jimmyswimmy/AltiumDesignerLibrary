@@ -13,4 +13,5 @@ A simple web-frontend for managing components in Altium Designer.  This is for y
     python main.py
 
 ## Credits
-    Thanks to Michael Fogleman of http://michaelfogleman.com who developed the HelloFlask starting point from which this application is derived.
+
+Thanks to Michael Fogleman of http://michaelfogleman.com who developed the HelloFlask starting point from which this application is derived.
