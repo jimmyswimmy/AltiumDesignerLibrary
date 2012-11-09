@@ -1,0 +1,13 @@
+# Simple .gitignore
+*.pyc
+*.pyd
+*.pyo
+*~
+*.cfg
+*.bak
+*.log
+*.sqlite
+*.sqlite3
+*.swp
+.project
+.pydevproject
