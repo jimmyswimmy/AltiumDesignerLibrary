@@ -39,7 +39,7 @@ def settings():
 def index():
     tables = db.Model.metadata.tables.keys()
     if not library.sym and not library.ftpt:
-        flash("There is a problem accessing the SVN repositories.  Check SVN settings.", "warning")
+        flash('There is a problem accessing the SVN repositories.  Check the <a href="%s">SVN Settings.</a>' % url_for('settings'), "warning")
     return render_template('index.html', tables=tables)
 
 @app.route('/table', methods=['GET','POST'])

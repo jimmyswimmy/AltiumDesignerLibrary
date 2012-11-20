@@ -49,15 +49,15 @@
         {% for category,message in messages %}
             {% if category == 'error' %}
                 <div class="alert alert-error">
-                    {{message}}
+                    {{message | safe}}
                 </div>
             {% elif category == 'success' %}
                 <div class="alert alert-success">
-                    {{message}}
+                    {{message | safe}}
                 </div>
             {% else %}
                 <div class="alert">
-                    {{message}}
+                    {{message | safe}}
                 </div>
             {% endif %}
         {% endfor %}
