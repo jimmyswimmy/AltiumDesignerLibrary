@@ -1,5 +1,6 @@
 from flask import flash, render_template, url_for, redirect, request, make_response
 from altium import app, db, library, CONFIG_FILE
+import re
 import forms
 import models
 import uuid
@@ -21,6 +22,35 @@ def get_table_data(name, order_by=None):
     rows = [(x.id, x.uuid, [getattr(x, field) for field in properties]) for x in component.query.order_by(' '.join(order_by)).all()]
     return headers, rows
 
+def search_table(table, query, order_by=None):
+    order_by = order_by or []
+    component = models.components[table]
+    properties = sorted(component.properties)
+    for field in models.HIDDEN_FIELDS:
+        properties.remove(field)
+    pattern = re.compile(r'(\"[^\"]+\")|([^\s\"]+)')
+    matches = pattern.findall(query)
+    tokens = [a or b for a, b in matches]
+    tokens = [token.replace('"', '').strip() for token in tokens]
+    tokens = filter(None, tokens) 
+
+    results = component.query
+    for token in tokens:
+        #ilike = '%%%s%%' % token
+        regex = r'\m%s\M' % token        
+        clauses = [getattr(component, p).op('~*')(regex) for p in properties]
+        results = results.filter(db.or_(*clauses))
+    results = results.distinct()
+
+    print "Searching table %s for %s" % (table, tokens)
+    print "Results: %s" % results.all()
+    
+    headers = [(True if prop in order_by else False, prop) for prop in properties]
+    rows = [(x.id, x.uuid, [getattr(x, field) for field in properties]) for x in results.order_by(' '.join(order_by)).all()]
+    
+    return headers, rows
+    
+    
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
     tables = db.Model.metadata.tables.keys()
@@ -48,6 +78,15 @@ def table():
     order_by = request.args.get('order_by', '')
     headers, rows = get_table_data(name, order_by=[order_by])
     return render_template('table.html', tables = db.Model.metadata.tables.keys(), headers=headers , data=rows, name=name)
+
+@app.route('/search', methods=['GET','POST'])
+def search():
+    table = request.args.get('table', '')
+    query = request.args.get('query', '')
+    headers, rows = search_table(table, query)
+    return render_template('search_results.html', tables = db.Model.metadata.tables.keys(), headers=headers , data=rows, name=table)
+
+
 
 @app.route('/edit', methods=['GET','POST'])
 def edit():

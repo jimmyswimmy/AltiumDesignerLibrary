@@ -1,8 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<p>
-<a class="btn" href="{{url_for('new', name=name)}}"><i class="icon-plus"></i> New {{prettify(name)}}</a>
-</p>
+
+<div>
+	<a class="btn pull-left" href="{{url_for('new', name=name)}}"><i class="icon-plus"></i> New {{prettify(name)}}</a>
+	<form class="form-search pull-right" action="{{url_for('search')}}">
+    	<div class="input-append">
+    		<input name="query" type="text" class="span2 search-query" />
+    		<input name="table" type="hidden" value="{{name}}" />
+    		<button type="submit" class="btn">Search</button>
+    	</div>
+    </form>
+</div>
+
 <table class="table table-bordered table-striped component-table">
     <tr>
         <th>&nbsp;</th>
