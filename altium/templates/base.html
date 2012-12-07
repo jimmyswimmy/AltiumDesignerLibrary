@@ -17,7 +17,7 @@
         <link rel="icon" type="image/png" href="{{static('images/favicon.ico')}}" />
     </head>
     <body>
-        <div class="navbar navbar-fixed-top">
+        <div class="navbar navbar-fixed-top navbar-inverse">
             <div class="navbar-inner">
                 <div class="container-fluid">
                     <a class="brand" style="padding: 4px" href="{{ url_for('index') }}"><img style="width:100%;" src="{{ static('images/altium_icon.png') }}" style="padding: 3px;" /></a> 
@@ -28,10 +28,26 @@
                     </a>
                     <a class="brand" href="{{ url_for('index') }}"> Altium Designer Library</a>
                     <div class="nav-collapse">
-                        <ul class="nav">
+                        <ul class="nav" role="navigation">
                             {{ nav_link('Home', 'index') }}
+							<li class="dropdown">
+	                        	<a class="dropdown-toggle" data-toggle="dropdown" href="#">Component<b class="caret"></b></a>
+	                        	<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+	                        	{% for table in tables %}
+	                        		<li><a href="{{ url_for('table', name=table) }}">{{prettify(table)}}</a></li>
+								{% endfor %}
+	                        	</ul>
+                        	</li>
+                        	{{ nav_link('Symbols', 'symbols') }}
+                        	{{ nav_link('Footprints', 'footprints') }}
+                        	{{ nav_link('Settings', 'settings') }}
                         </ul>
                     </div>
+                    <!--
+                    <form class="navbar-search pull-right" id="search" action="{{url_for('search')}}">
+                    	<input name="q" type="text" class="search-query" placeholder="Search">
+                    </form>
+                    -->
                 </div>
             </div>
         </div>

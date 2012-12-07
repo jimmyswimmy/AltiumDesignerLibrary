@@ -15,4 +15,4 @@ def table_image(table):
 
 @app.context_processor
 def context_processor():
-    return dict(static=static, table_image=table_image, prettify=prettify)
+    return dict(static=static, table_image=table_image, prettify=prettify, zip=zip)

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+<div>
+	<form class="form-search pull-right" action="{{url_for('search')}}">
+    	<div class="input-append">
+    		<input name="query" type="text" class="span2 search-query" />
+    		<input name="table" type="hidden" value="{{name}}" />
+    		<button type="submit" class="btn">Search</button>
+    	</div>
+    </form>
+</div>
+{% if data %}
+<table class="table table-bordered table-striped component-table">
+    <tr>
+        <th>&nbsp;</th>
+        {% for order_by, header in headers %}
+        <th>
+
+            <a href="{{url_for('table', name=name, order_by=header )}}">
+            	{% if order_by %}
+            	<b class="caret"></b>
+            	{% endif %}
+            	{{ prettify(header) }}
+            </a>
+        </th>
+        {% endfor %}
+    </tr>
+    {% for id, uuid, row in data %}
+    <tr>
+        <td class="action-cell">
+            <a href="{{url_for('delete', name=name, id=id)}}"><img src="{{static('images/cross.png')}}" title="Delete" alt="Delete"></a>
+            <a href="{{url_for('edit', name=name, id=id)}}"><img src="{{static('images/page_white_edit.png')}}" title="Edit" alt="Edit"></a>
+            <a href="{{url_for('new', name=name, template=id)}}"><img src="{{static('images/page_white_copy.png')}}" title="Duplicate" alt="Duplicate"></a>
+        </td>
+        {% for cell, (order_by, header) in zip(row, headers) %}
+        <td>
+        {% if header == 'library_ref' %}
+        	<a href="{{url_for('get_file', name=cell, type='symbol')}}">{{cell}}</a>
+        {% elif header == 'footprint_ref' %}
+        	<a href="{{url_for('get_file', name=cell, type='footprint')}}">{{cell}}</a>        
+        {% else %}
+        	{{cell}}
+        {% endif %}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+<p style="text-align: center;"><strong>Search returned {{ data | length }} results.</strong></p>
+{% else %}
+<h3 style="text-align: center;">Search returned no results.</h3>
+{% endif %}
+{% endblock %}
+

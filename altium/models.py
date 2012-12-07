@@ -1,4 +1,3 @@
-from sqlalchemy import *
 from altium import db
 HIDDEN_FIELDS = ('uuid', 'id')
 # Models are auto-generated, because our database schema is really stupid-simple
@@ -40,4 +39,5 @@ class Connector(db.Model):
 class IC(db.Model):
     __table__ = meta.tables['ic']
     properties = meta.tables['ic'].c.keys()
+    
 components = {'resistor':Resistor, 'capacitor':Capacitor, 'inductor':Inductor, 'diode':Diode, 'crystal':Crystal, 'mosfet':MOSFET, 'bjt':BJT, 'connector':Connector, 'ic':IC}
