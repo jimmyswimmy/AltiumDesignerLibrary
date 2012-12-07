@@ -1,16 +1,16 @@
 from flask import flash, render_template, url_for, redirect, request, make_response
 from altium import app, db, library, CONFIG_FILE
-import re
+import tablib
+import re, uuid
 import forms
 import models
-import uuid
 import util
 
 
 def get_table_data(name, order_by=None):
     '''
     Return a 2-tuple of header and table row data:
-    header = [(order_by, header, pretty_header),]
+    header = [(order_by, header),]
     row = [(id, uuid,  [col1,col2...coln]),]
     '''
     component = models.components[name]
@@ -86,7 +86,36 @@ def search():
     headers, rows = search_table(table, query)
     return render_template('search_results.html', tables = db.Model.metadata.tables.keys(), headers=headers , data=rows, name=table)
 
-
+@app.route('/export', methods=['GET','POST'])
+def export():
+    table = request.args.get('name', '')
+    format = request.args.get('format', 'json')
+    #header = [(order_by, header, pretty_header),]
+    #row = [(id, uuid,  [col1,col2...coln]),]
+    headers, rows = get_table_data(table)
+    order_by, headers = zip(*headers)
+    data = tablib.Dataset(headers=['uuid'] + list(headers))
+    for _id, uuid, fields in rows:
+        data.append([uuid] + list(fields))
+    
+    if format == 'json':
+        exported_data = data.json
+        content_type = 'text/json'        
+    if format == 'xls':
+        exported_data = data.xls
+        content_type = 'application/vnd.ms-excel'
+    elif format == 'csv':
+        exported_data = data.csv
+        content_type = 'text/csv'
+    else:
+        raise Exception("Invalid format")
+    
+    # Export in appropriate format    
+    response = make_response(exported_data)
+    response.headers['Content-Type'] = content_type
+    response.headers['Content-Disposition'] = 'attachment; filename=%s.%s' % (table, format)
+    
+    return response
 
 @app.route('/edit', methods=['GET','POST'])
 def edit():

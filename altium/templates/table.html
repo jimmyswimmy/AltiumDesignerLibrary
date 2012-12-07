@@ -2,7 +2,8 @@
 {% block content %}
 
 <div>
-	<a class="btn pull-left" href="{{url_for('new', name=name)}}"><i class="icon-plus"></i> New {{prettify(name)}}</a>
+	<a class="btn" href="{{url_for('new', name=name)}}"><i class="icon-plus"></i> New {{prettify(name)}}</a>
+	<a class="btn " href="{{url_for('export', name=name, format='xls')}}"><i class="icon-file"></i>Download .xls</a>
 	<form class="form-search pull-right" action="{{url_for('search')}}">
     	<div class="input-append">
     		<input name="query" type="text" class="span2 search-query" />
