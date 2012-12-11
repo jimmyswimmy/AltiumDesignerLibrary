@@ -3,6 +3,10 @@ import os
 import time
 import datetime
 
+
+def total_seconds(td):
+    return td.days * 60 * 60 * 24 + td.seconds
+
 # Replacements for things like acronyms that don't prettify() well
 PRETTYDICT = {  'esr' : 'ESR',
                 'uuid' : 'UUID',
@@ -18,7 +22,7 @@ def save_config(config, filename):
         for key, value in config.items():
             # Config values must be basic types, timedeltas not allowed
             if isinstance(value, datetime.timedelta):
-                value = int(value.total_seconds())
+                value = int(total_seconds(value))
             fp.write('%s = %s\n' % (key, repr(value)))
 
 def svnjoin(*parts):

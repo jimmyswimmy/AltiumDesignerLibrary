@@ -70,17 +70,19 @@ def settings():
         if warning:
             flash(warning, "error")
         flash("Your settings have been saved.", "success")
+        models.create()
         return redirect(request.referrer)
     return render_template('settings.html', form=form, tables=tables)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     tables = db.Model.metadata.tables.keys()
-    info = {'svn_ok' : bool(library.sym) and bool(library.ftpt), 'db_ok' : True}
+    info = {'svn_ok' : bool(library.sym) and bool(library.ftpt), 'db_ok' : models.ok}
     info.update({'syms' : len(library.sym), 'ftpts' : len(library.ftpt)})
     info.update({'db_tables' : len(tables)})
     if not library.sym and not library.ftpt:
         flash('There is a problem accessing the SVN repositories.  Check the <a href="%s">SVN Settings.</a>' % url_for('settings'), "warning")
+    print models.components
     return render_template('index.html', tables=tables, info=info)
 
 @app.route('/table', methods=['GET','POST'])

@@ -18,4 +18,7 @@ db = SQLAlchemy(app)
     
 import hooks
 import models
+
+models.create()
+
 import views

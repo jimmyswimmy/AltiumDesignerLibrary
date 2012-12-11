@@ -4,22 +4,6 @@
 
 <div class="row-fluid">
 	<div class="span7">
-		<div class="row-fluid">
-		<div class="span12">
-		<div class="btn-group">
-			<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-				Export
-				<span class="caret"></span>
-			</a>
-			<ul class="dropdown-menu">
-				<li><a tabindex="-1" href="{{url_for('export', format='xls', name=name)}}"><i class="icon-list-alt"></i> XLS</a>
-				<li><a tabindex="-1" href="{{url_for('export', format='csv', name=name)}}"><i class="icon-file"></i> CSV</a>
-				<li><a tabindex="-1" href="{{url_for('export', format='json', name=name)}}"><i class="icon-wrench"></i> JSON</a>
-			</ul>
-		</div>
-		</div>
-		</div>
-	
 		<table class="table table-bordered">
 		<tr>
 			<th>Table</th>
