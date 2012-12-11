@@ -1,12 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-<p>
-	<ul>
+	
+	<table class="table">
+	<tr>
+		<th>Name</th>
+		<th>Size</th>
+		<th>Last Modified</th>
+	</tr>
 	{% for name in names %}
-	<li><a href="{{url_for('get_file', name=name, type=type)}}">{{name}}</a></li>
+	<tr>
+		<td><a href="{{url_for('get_file', name=name, type=type)}}">{{name}}</a></td>
+		<td>Size</td>
+		<td>Last Modified</td>
+	</tr>
 	{% endfor %}
-	</ul>
-</p>
-
+	</table>
 {% endblock %}
 

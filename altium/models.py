@@ -1,43 +1,19 @@
 from altium import db
+
+# These are fields that every table must have for the model to work properly,
+# but aren't fields that we generally want to display to the user.
 HIDDEN_FIELDS = ('uuid', 'id')
-# Models are auto-generated, because our database schema is really stupid-simple
+
+# Models are auto-generated, because our database schema is really simple
+# There's a table for each component type
 meta = db.Model.metadata
 meta.reflect(db.engine)
 
-class Resistor(db.Model):
-    __table__ = meta.tables['resistor']
-    properties = meta.tables['resistor'].c.keys()
+components = {}
 
-class Capacitor(db.Model):
-    __table__ = meta.tables['capacitor']
-    properties = meta.tables['capacitor'].c.keys()
-
-class Inductor(db.Model):
-    __table__ = meta.tables['inductor']
-    properties = meta.tables['inductor'].c.keys()
-
-class Diode(db.Model):
-    __table__ = meta.tables['diode']
-    properties = meta.tables['diode'].c.keys()
-
-class Crystal(db.Model):
-    __table__ = meta.tables['crystal']
-    properties = meta.tables['crystal'].c.keys()
-
-class MOSFET(db.Model):
-    __table__ = meta.tables['mosfet']
-    properties = meta.tables['mosfet'].c.keys()
-
-class BJT(db.Model):
-    __table__ = meta.tables['bjt']
-    properties = meta.tables['bjt'].c.keys()
-
-class Connector(db.Model):
-    __table__ = meta.tables['connector']
-    properties = meta.tables['connector'].c.keys()
-
-class IC(db.Model):
-    __table__ = meta.tables['ic']
-    properties = meta.tables['ic'].c.keys()
-    
-components = {'resistor':Resistor, 'capacitor':Capacitor, 'inductor':Inductor, 'diode':Diode, 'crystal':Crystal, 'mosfet':MOSFET, 'bjt':BJT, 'connector':Connector, 'ic':IC}
+# Model generation happens here.
+# A new model class is created for each table in the database.
+# All the models are stored in the 'components' dictionary, which the rest of the application uses as the overall model.
+for name, table in meta.tables.items():
+    cls = type(str(name), (db.Model, object), {'__table__' : table,'properties' : table.c.keys()})
+    components[name] = cls

@@ -1,14 +1,82 @@
 {% extends "base.html" %}
 
 {% block content %}
-    {% for table in tables %}
-    <div class="row">
-        <div class="span1">
-            <img src="{{ table_image(table) }}" style="width: 70px;" />
-        </div>
-        <div class="span11"> 
-            <h2><a href="{{ url_for('table', name=table) }}">{{prettify(table)}}</a></h2>
-        </div>
-    </div>
-    {% endfor %}
+
+<div class="row-fluid">
+	<div class="span7">
+		<div class="row-fluid">
+		<div class="span12">
+		<div class="btn-group">
+			<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+				Export
+				<span class="caret"></span>
+			</a>
+			<ul class="dropdown-menu">
+				<li><a tabindex="-1" href="{{url_for('export', format='xls', name=name)}}"><i class="icon-list-alt"></i> XLS</a>
+				<li><a tabindex="-1" href="{{url_for('export', format='csv', name=name)}}"><i class="icon-file"></i> CSV</a>
+				<li><a tabindex="-1" href="{{url_for('export', format='json', name=name)}}"><i class="icon-wrench"></i> JSON</a>
+			</ul>
+		</div>
+		</div>
+		</div>
+	
+		<table class="table table-bordered">
+		<tr>
+			<th>Table</th>
+			<!-- <th>Parts</th> -->
+		</tr>
+		{% for table in tables %}
+			<tr>
+				<td><a href="{{url_for('table', name=table)}}">{{prettify(table)}}</a></td>
+				<!--  <td>&nbsp;</td> -->
+			</tr>
+		{% endfor %}
+		</table>
+	</div>
+	<div class="span5">
+		<table class="table table-bordered">
+			<tr>
+			<th>
+			Subversion Library Info</th></tr>
+			<tr>
+				<td>Subversion Connection:</td>
+				<td>
+					{% if info.svn_ok %}
+						<span class="label label-success">OK</span>
+					{% else %}
+						<span class="label label-important">Error</span>
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td>Symbol Files:</td>
+				<td>{{info.syms}}</td>
+			</tr>
+			<tr>
+				<td>Footprint Files:</td>
+				<td>{{info.ftpts}}</td>
+			</tr>
+		</table>
+		<table class="table table-bordered">
+			<tr>
+			<th>
+			Database Info</th></tr>
+			<tr>
+				<td>Database Connection:</td>
+				<td>
+					{% if info.db_ok %}
+						<span class="label label-success">OK</span>
+					{% else %}
+						<span class="label label-important">Error</span>
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td>Tables:</td>
+				<td>{{info.db_tables}}</td>
+			</tr>
+		</table>
+	</div>
+</div>
+
 {% endblock %}

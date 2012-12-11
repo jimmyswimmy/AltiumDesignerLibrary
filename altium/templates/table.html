@@ -3,7 +3,19 @@
 
 <div>
 	<a class="btn" href="{{url_for('new', name=name)}}"><i class="icon-plus"></i> New {{prettify(name)}}</a>
-	<a class="btn " href="{{url_for('export', name=name, format='xls')}}"><i class="icon-file"></i>Download .xls</a>
+
+	<div class="btn-group">
+		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+			Export
+			<span class="caret"></span>
+		</a>
+		<ul class="dropdown-menu">
+			<li><a tabindex="-1" href="{{url_for('export', format='xls', name=name)}}"><i class="icon-list-alt"></i> XLS</a>
+			<li><a tabindex="-1" href="{{url_for('export', format='csv', name=name)}}"><i class="icon-file"></i> CSV</a>
+			<li><a tabindex="-1" href="{{url_for('export', format='json', name=name)}}"><i class="icon-wrench"></i> JSON</a>
+		</ul>
+	</div>
+	
 	<form class="form-search pull-right" action="{{url_for('search')}}">
     	<div class="input-append">
     		<input name="query" type="text" class="span2 search-query" />
@@ -18,7 +30,6 @@
         <th>&nbsp;</th>
         {% for order_by, header in headers %}
         <th>
-
             <a href="{{url_for('table', name=name, order_by=header )}}">
             	{% if order_by %}
             	<b class="caret"></b>

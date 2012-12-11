@@ -22,6 +22,14 @@ def get_table_data(name, order_by=None):
     rows = [(x.id, x.uuid, [getattr(x, field) for field in properties]) for x in component.query.order_by(' '.join(order_by)).all()]
     return headers, rows
 
+def get_table_dataset(name, order_by=None):
+    headers, rows = get_table_data(name)
+    order_by, headers = zip(*headers)
+    data = tablib.Dataset(headers=['uuid'] + list(headers))
+    for _id, uuid, fields in rows:
+        data.append([uuid] + list(fields))
+    return data
+
 def search_table(table, query, order_by=None):
     order_by = order_by or []
     component = models.components[table]
@@ -68,9 +76,12 @@ def settings():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     tables = db.Model.metadata.tables.keys()
+    info = {'svn_ok' : bool(library.sym) and bool(library.ftpt), 'db_ok' : True}
+    info.update({'syms' : len(library.sym), 'ftpts' : len(library.ftpt)})
+    info.update({'db_tables' : len(tables)})
     if not library.sym and not library.ftpt:
         flash('There is a problem accessing the SVN repositories.  Check the <a href="%s">SVN Settings.</a>' % url_for('settings'), "warning")
-    return render_template('index.html', tables=tables)
+    return render_template('index.html', tables=tables, info=info)
 
 @app.route('/table', methods=['GET','POST'])
 def table():
@@ -89,33 +100,31 @@ def search():
 @app.route('/export', methods=['GET','POST'])
 def export():
     table = request.args.get('name', '')
-    format = request.args.get('format', 'json')
-    #header = [(order_by, header, pretty_header),]
-    #row = [(id, uuid,  [col1,col2...coln]),]
-    headers, rows = get_table_data(table)
-    order_by, headers = zip(*headers)
-    data = tablib.Dataset(headers=['uuid'] + list(headers))
-    for _id, uuid, fields in rows:
-        data.append([uuid] + list(fields))
+    _format = request.args.get('format', 'json')
+    data = get_table_dataset(table)
     
-    if format == 'json':
+    if _format == 'json':
         exported_data = data.json
-        content_type = 'text/json'        
-    if format == 'xls':
+        content_type = 'application/json'        
+    elif _format == 'xls':
         exported_data = data.xls
         content_type = 'application/vnd.ms-excel'
-    elif format == 'csv':
+    elif _format == 'csv':
         exported_data = data.csv
         content_type = 'text/csv'
     else:
-        raise Exception("Invalid format")
+        raise Exception("Invalid format '%s'" % _format)
     
     # Export in appropriate format    
     response = make_response(exported_data)
     response.headers['Content-Type'] = content_type
-    response.headers['Content-Disposition'] = 'attachment; filename=%s.%s' % (table, format)
+    response.headers['Content-Disposition'] = 'attachment; filename=%s.%s' % (table, _format)
     
     return response
+
+@app.route('/import', methods=['GET'])
+def _import():
+    return render_template('import_1.html', tables=db.Model.metadata.tables.keys())
 
 @app.route('/edit', methods=['GET','POST'])
 def edit():
