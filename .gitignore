@@ -11,3 +11,4 @@
 *.swp
 .project
 .pydevproject
+.sessions

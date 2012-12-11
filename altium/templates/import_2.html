@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Import Step 2: Review Updates</h3>
+<p>The contents of your file are listed below.  Review them to be sure these are the changes you wish to commit to the database
+<a class="btn btn-info pull-right">Yeah Man! &gt; &gt;</a></p>
+<table class="table table-bordered table-striped component-table">
+    <tr>
+        {% for header in data.headers %}
+        <th>
+           {{ prettify(header) }}
+        </th>
+        {% endfor %}
+    </tr>
+    {% for row in data %}
+    <tr>
+ 		{% for cell, header in zip(row, data.headers) %}
+        <td>
+        {% if header == 'library_ref' %}
+        	<a href="{{url_for('get_file', name=cell, type='symbol')}}">{{cell}}</a>
+        {% elif header == 'footprint_ref' %}
+        	<a href="{{url_for('get_file', name=cell, type='footprint')}}">{{cell}}</a>        
+        {% elif header == 'status' %}
+        	{% if cell %}
+        		<span class="badge badge-warning">Update</span>
+        	{% else %}
+        		<span class="badge badge-success">Create</span>
+        	{% endif %}
+        {% else %}
+        	{{cell}}
+        {% endif %}
+		</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

@@ -1,5 +1,6 @@
-from flask import flash, render_template, url_for, redirect, request, make_response
+from flask import flash, render_template, url_for, redirect, request, make_response, session
 from altium import app, db, library, CONFIG_FILE
+import csv
 import tablib
 import re, uuid
 import forms
@@ -29,6 +30,14 @@ def get_table_dataset(name, order_by=None):
     for _id, uuid, fields in rows:
         data.append([uuid] + list(fields))
     return data
+
+def get_file_dataset(_file):
+        reader = csv.reader(_file)
+        headers = reader.next()
+        data = tablib.Dataset(headers=headers)
+        for row in reader:
+            data.append(row)
+        return data
 
 def search_table(table, query, order_by=None):
     order_by = order_by or []
@@ -61,7 +70,7 @@ def search_table(table, query, order_by=None):
     
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
-    tables = db.Model.metadata.tables.keys()
+    tables = models.components.keys()
     form = forms.create_prefs_form()
     if form.validate_on_submit():
         form.populate_obj(util.AttributeWrapper(app.config))
@@ -76,7 +85,7 @@ def settings():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    tables = db.Model.metadata.tables.keys()
+    tables = models.components.keys()
     info = {'svn_ok' : bool(library.sym) and bool(library.ftpt), 'db_ok' : models.ok}
     info.update({'syms' : len(library.sym), 'ftpts' : len(library.ftpt)})
     info.update({'db_tables' : len(tables)})
@@ -90,14 +99,14 @@ def table():
     name = request.args['name']
     order_by = request.args.get('order_by', '')
     headers, rows = get_table_data(name, order_by=[order_by])
-    return render_template('table.html', tables = db.Model.metadata.tables.keys(), headers=headers , data=rows, name=name)
+    return render_template('table.html', tables = models.components.keys(), headers=headers , data=rows, name=name)
 
 @app.route('/search', methods=['GET','POST'])
 def search():
     table = request.args.get('table', '')
     query = request.args.get('query', '')
     headers, rows = search_table(table, query)
-    return render_template('search_results.html', tables = db.Model.metadata.tables.keys(), headers=headers , data=rows, name=table)
+    return render_template('search_results.html', tables = models.components.keys(), headers=headers , data=rows, name=table)
 
 @app.route('/export', methods=['GET','POST'])
 def export():
@@ -124,9 +133,29 @@ def export():
     
     return response
 
-@app.route('/import', methods=['GET'])
+@app.route('/import', methods=['GET', 'POST'])
 def _import():
-    return render_template('import_1.html', tables=db.Model.metadata.tables.keys())
+    
+    # Entry point:  When in doubt: Stage 1.
+    stage = session.get('stage', 1)
+    if request.method == 'GET':
+        stage = 1
+    
+    # Stage 2: We have a file from the user
+    if stage == 2:
+        _file = request.files['file']
+        data = get_file_dataset(_file)
+        import_uuids = data['uuid']
+        c = models.components['diode']
+        parts = db.session.query(c).filter(c.uuid.in_(import_uuids)).all()
+        db_uuids = set([part.uuid for part in parts])
+        uuid_idx = data.headers.index('uuid')
+        data.append_col(lambda row : row[uuid_idx] in db_uuids, header="status")
+
+        return render_template('import_2.html', tables=models.components.keys(), data=data)
+    else:
+        session['stage'] = 2
+        return render_template('import_1.html', tables=models.components.keys())
 
 @app.route('/edit', methods=['GET','POST'])
 def edit():
@@ -143,7 +172,7 @@ def edit():
         flash("The component was edited successfully.", "success")
         return redirect(url_for('table', name=name))
     form = Form(obj=component)
-    return render_template('edit.html',  tables = db.Model.metadata.tables.keys(), form=form, sch=library.sym, ftpt=library.ftpt)
+    return render_template('edit.html',  tables = models.components.keys(), form=form, sch=library.sym, ftpt=library.ftpt)
 
 @app.route('/new', methods=['GET','POST'])
 def new():
@@ -167,7 +196,7 @@ def new():
         db.session.commit()
         flash("The new component was created successfully.", "success")
         return redirect(url_for('table', name=name))
-    return render_template('edit.html',  tables = db.Model.metadata.tables.keys(), form=form, sch=library.sym, ftpt=library.ftpt)
+    return render_template('edit.html',  tables = models.components.keys(), form=form, sch=library.sym, ftpt=library.ftpt)
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
@@ -181,11 +210,11 @@ def delete():
 
 @app.route('/symbols', methods=['GET'])
 def symbols():
-    return render_template('list.html', tables = db.Model.metadata.tables.keys(), names=library.sym, type='symbol')
+    return render_template('list.html', tables = models.components.keys(), names=library.sym, type='symbol')
 
 @app.route('/footprints', methods=['GET'])
 def footprints():
-    return render_template('list.html', tables = db.Model.metadata.tables.keys(), names=library.ftpt, type='footprint')
+    return render_template('list.html', tables = models.components.keys(), names=library.ftpt, type='footprint')
 
 @app.route('/get_file', methods=['GET'])
 def get_file():
