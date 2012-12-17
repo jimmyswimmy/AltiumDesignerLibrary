@@ -1,8 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>Import Step 2: Review Updates</h3>
-<p>The contents of your file are listed below.  Review them to be sure these are the changes you wish to commit to the database
-<a class="btn btn-info pull-right">Yeah Man! &gt; &gt;</a></p>
+<div class="row-fluid bottom-row">
+	<div class="span10">
+		<h3>Import Step 2: Review Updates</h3>
+		<p>The contents of your file are listed below.  Review them to be sure these are the changes you wish to commit to the database.</p>
+		<p><span class="badge badge-success">Create</span> Means a new component will be added to the database.</p>
+		<p><span class="badge badge-warning">Update</span> Means an existing component will be updated with new data from the import.</p>
+	</div>
+	<div class="span2 offset10 bottom-span">
+		<a class="btn btn-info btn-large pull-right">Next <i class="icon-chevron-right icon-white"></i></a>
+	</div>
+</div>
+
 <table class="table table-bordered table-striped component-table">
     <tr>
         {% for header in data.headers %}

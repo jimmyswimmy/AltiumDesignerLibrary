@@ -1,18 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>Import Step 1: Choose a File</h3>
-<p>Choose a file containing data to import.  You will have the opportunity to review the imported parts before finalizing the import.</p>
 <form method="post" action="/import" enctype="multipart/form-data">    
-	<input name="file" id="file_input" type="file" style="display:none">
-    <div class="input-append">
-    	<input class="input-xlarge uneditable-input" id="file_input_text" type="text">
-    	<button class="btn" type="button" onclick="$('input[id=file_input]').click();">Browse...</button>
-    </div>
-    <script type="text/javascript">
-    $('input[id=file_input]').change(function() {
-    	$('#file_input_text').val($(this).val());
-    });
-    </script>
-    <button class="btn btn-info" type="submit">Next &gt;&gt;</button> 
+<div class="row-fluid bottom-row">
+	<div class="span10">
+	<h3>Import Step 1: Choose a File</h3>
+	<p>Choose a file containing data to import.  You will have the opportunity to review the imported parts before finalizing the import.</p>
+		<input name="file" id="file_input" type="file" style="display:none">
+	    <div class="input-append">
+	    	<input class="input-xlarge uneditable-input" id="file_input_text" type="text">
+	    	<button class="btn" type="button" onclick="$('input[id=file_input]').click();">Browse...</button>
+	    </div>
+	    <input type="hidden" name="name" value="{{table}}" />
+	    <script type="text/javascript">
+	    $('input[id=file_input]').change(function() {
+	    	$('#file_input_text').val($(this).val());
+	    });
+	    </script>
+	    <button class="btn btn-info btn-large" type="submit">Next <i class="icon-chevron-right icon-white"></i></button> 
+	</div>
+</div>
 </form>
 {% endblock %}

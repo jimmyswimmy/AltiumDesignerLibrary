@@ -14,7 +14,8 @@ util.save_config(app.config, CONFIG_PATH)
 
 # Server-side sessions
 
-path = app.config['SESSION_PATH']                   
+#path = app.config['SESSION_PATH']                   
+path = os.path.join(app.root_path, '.sessions')
 if not os.path.exists(path):
     os.mkdir(path)
     os.chmod(path, int('700', 8))
@@ -23,7 +24,7 @@ app.session_interface = SqliteSessionInterface(path)
 
 # Initial check of the library to establish SVN data
 library = util.SVNLibrary()
-library.check()
+#library.check()
 db = SQLAlchemy(app)
 
     

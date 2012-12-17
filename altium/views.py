@@ -135,7 +135,13 @@ def export():
 
 @app.route('/import', methods=['GET', 'POST'])
 def _import():
-    
+    try:
+        name = request.args.get('name', None)
+        if not name:
+            name = request.form['name']
+    except Exception, e:
+        print e
+
     # Entry point:  When in doubt: Stage 1.
     stage = session.get('stage', 1)
     if request.method == 'GET':
@@ -144,18 +150,46 @@ def _import():
     # Stage 2: We have a file from the user
     if stage == 2:
         _file = request.files['file']
-        data = get_file_dataset(_file)
-        import_uuids = data['uuid']
-        c = models.components['diode']
+
+        # Parse the file as a CSV
+        try:
+            data = get_file_dataset(_file)
+        except Exception, e:
+            msg = str(e)
+            flash('There was an error parsing your file%s' % (': %s' % msg if msg else '.'), 'error')
+        
+        # Make sure the parts have uuids
+        try:
+            import_uuids = data['uuid']
+        except KeyError, e:
+            msg = str(e)
+            flash('The uploaded file does not contain a uuid column.', 'error')
+            return render_template('import_1.html', table=name, tables=models.components.keys())
+            
+        # Compare columns in the imported dataset with columns in the table and make sure they look sane
+        c = models.components[name]
+        import_columns_not_in_db = set(data.headers) - set(c.properties)
+        db_columns_not_in_import = set(c.properties) - set(data.headers)
+        print import_columns_not_in_db
+        print db_columns_not_in_import
+        if len(db_columns_not_in_import) == len(c.properties):
+            flash('The imported file columns do not match the columns of this table. At least one column in the imported file must be present in the target table to perform an import.', 'error')
+            return render_template('import_1.html', table=name, tables=models.components.keys())
+        if len(db_columns_not_in_import) > 1:
+            flash('Imported file does not have all the columns that this table does.  Some columns will be filled with default values.')
+        if len(import_columns_not_in_db) > 0:
+            flash('Imported file has columns that do not appear in this table. Data from these columns were not imported.', 'warning')
+        
+        # Pull all the parts that need updating from the database
         parts = db.session.query(c).filter(c.uuid.in_(import_uuids)).all()
         db_uuids = set([part.uuid for part in parts])
         uuid_idx = data.headers.index('uuid')
         data.append_col(lambda row : row[uuid_idx] in db_uuids, header="status")
-
-        return render_template('import_2.html', tables=models.components.keys(), data=data)
+        return render_template('import_2.html', table=name, tables=models.components.keys(), data=data)
     else:
+        # finally:
         session['stage'] = 2
-        return render_template('import_1.html', tables=models.components.keys())
+        return render_template('import_1.html', table=name, tables=models.components.keys())
 
 @app.route('/edit', methods=['GET','POST'])
 def edit():

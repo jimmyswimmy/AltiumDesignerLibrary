@@ -12,7 +12,8 @@ PRETTYDICT = {  'esr' : 'ESR',
                 'uuid' : 'UUID',
                 'bjt' : 'BJT',
                 'mosfet' : 'MOSFET',
-                'ic' : 'IC'}
+                'ic' : 'IC',
+                'scr' : 'SCR'}
 def prettify(s):
     words = s.lower().replace('_', ' ').split()
     return ' '.join([PRETTYDICT.get(word, word.capitalize()) for word in words])
