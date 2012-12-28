@@ -58,10 +58,7 @@ def search_table(table, query, order_by=None):
         clauses = [getattr(component, p).op('~*')(regex) for p in properties]
         results = results.filter(db.or_(*clauses))
     results = results.distinct()
-
-    print "Searching table %s for %s" % (table, tokens)
-    print "Results: %s" % results.all()
-    
+        
     headers = [(True if prop in order_by else False, prop) for prop in properties]
     rows = [(x.id, x.uuid, [getattr(x, field) for field in properties]) for x in results.order_by(' '.join(order_by)).all()]
     
@@ -91,7 +88,6 @@ def index():
     info.update({'db_tables' : len(tables)})
     if not library.sym and not library.ftpt:
         flash('There is a problem accessing the SVN repositories.  Check the <a href="%s">SVN Settings.</a>' % url_for('settings'), "warning")
-    print models.components
     return render_template('index.html', tables=tables, info=info)
 
 @app.route('/table', methods=['GET','POST'])
