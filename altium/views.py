@@ -1,4 +1,4 @@
-from flask import flash, render_template, url_for, redirect, request, make_response, session
+from flask import flash, render_template, url_for, redirect, request, make_response, session, g
 from altium import app, db, library, CONFIG_FILE
 import csv
 import tablib
@@ -146,7 +146,8 @@ def _import():
     stage = session.get('stage', 1)
     if request.method == 'GET':
         stage = 1
-    
+        g.import_data = None
+
     # Stage 2: We have a file from the user
     if stage == 2:
         _file = request.files['file']
@@ -170,8 +171,8 @@ def _import():
         c = models.components[name]
         import_columns_not_in_db = set(data.headers) - set(c.properties)
         db_columns_not_in_import = set(c.properties) - set(data.headers)
-        print import_columns_not_in_db
-        print db_columns_not_in_import
+
+        # Warn the user about any discrepancies in the data
         if len(db_columns_not_in_import) == len(c.properties):
             flash('The imported file columns do not match the columns of this table. At least one column in the imported file must be present in the target table to perform an import.', 'error')
             return render_template('import_1.html', table=name, tables=models.components.keys())
@@ -185,6 +186,10 @@ def _import():
         db_uuids = set([part.uuid for part in parts])
         uuid_idx = data.headers.index('uuid')
         data.append_col(lambda row : row[uuid_idx] in db_uuids, header="status")
+        
+        # data is
+        g.import_data = data        
+        
         return render_template('import_2.html', table=name, tables=models.components.keys(), data=data)
     else:
         # finally:

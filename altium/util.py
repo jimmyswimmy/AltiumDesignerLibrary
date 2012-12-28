@@ -86,7 +86,7 @@ class SVNLibrary(ThreadWorker):
             return None
         except Exception, e:
             return str(e)
-        
+            
     def update(self, silent=True):
         from altium import app
         url = app.config['ALTIUM_SVN_URL']
@@ -104,10 +104,12 @@ class SVNLibrary(ThreadWorker):
                 indices.append(dict(zip(base_names, file_paths)))
             self.sym_index, self.ftpt_index = indices
         except Exception, e:
+            import traceback, sys
+            traceback.print_exc(file=sys.stderr)
             self.sym_index, self.ftpt_index = ({},{})
             if not silent:
                 raise e
-            
+    
     def get_symbol_file(self, name):
         import pysvn
         svn_client = pysvn.Client()

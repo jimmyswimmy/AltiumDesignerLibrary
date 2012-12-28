@@ -1,9 +1,9 @@
-import os, errno, sqlite3
+import os, errno, sqlite3, sys
 from uuid import uuid4
 from cPickle import dumps, loads
 from collections import MutableMapping
 from flask.sessions import SessionInterface, SessionMixin
-import hashlib
+import hashlib, uuid
 
 # Taken From Flask Snippets:
 # http://flask.pocoo.org/snippets/86/
@@ -29,9 +29,12 @@ class SqliteSession(MutableMapping, SessionMixin):
         self.modified = False
         self.conn = None
         if not os.path.exists(self.path):
+            sys.stderr.write("Creating SQLite file: %s\n" % self.path)
             with self._get_conn() as conn:
                 conn.execute(self._create_sql)
                 self.new = True
+        else:
+            sys.stderr.write("SID already exists %s\n" % sid)
 
     def __getitem__(self, key):
         key = dumps(key, 0)
@@ -45,6 +48,7 @@ class SqliteSession(MutableMapping, SessionMixin):
         return rv
 
     def __setitem__(self, key, value):
+        sys.stderr.write("Setting %s=%s\n" % (key, value))
         key = dumps(key, 0)
         value = buffer(dumps(value, 2))
         with self._get_conn() as conn:
@@ -122,7 +126,8 @@ class SqliteSessionInterface(SessionInterface):
     def open_session(self, app, request):
         sid = request.cookies.get(app.session_cookie_name)
         if not sid:
-            sid = str(hashlib.sha1(sid).hexdigest())
+            sid = str(uuid.uuid4())
+        sid = str(hashlib.sha1(sid).hexdigest())
         rv = SqliteSession(self.directory, sid)
         return rv
 
@@ -140,5 +145,4 @@ class SqliteSessionInterface(SessionInterface):
                         domain=domain)
             return
         cookie_exp = self.get_expiration_time(app, session)
-        response.set_cookie(app.session_cookie_name, session.sid,
-                expires=cookie_exp, httponly=True, domain=domain)
+        response.set_cookie(app.session_cookie_name, session.sid, expires=cookie_exp, httponly=True, domain=domain)

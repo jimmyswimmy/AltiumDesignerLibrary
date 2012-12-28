@@ -3,7 +3,7 @@ This is the base configuration file.
 All configuration options live here
 '''
 
-SECRET_KEY = 'CHANGE_ME'
+SECRET_KEY = 'ALTIUM DESIGNER LIBRARY SECRET KEY 379164825'
 SQLALCHEMY_DATABASE_URI = 'postgres://postgres:password@localhost/altium'
 STATIC_ROOT = None
 
