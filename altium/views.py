@@ -1,5 +1,5 @@
 from flask import flash, render_template, url_for, redirect, request, make_response, session, g
-from altium import app, db, library, CONFIG_FILE
+from altium import app, db, library, CONFIG_PATH
 import csv
 import tablib
 import re, uuid
@@ -13,7 +13,7 @@ def get_table_data(name, order_by=None):
     Return a 2-tuple of header and table row data:
     header = [(order_by, header),]
     row = [(id, uuid,  [col1,col2...coln]),]
-    '''
+    ''' 
     component = models.components[name]
     properties = sorted(component.properties)
     order_by = order_by or []
@@ -71,7 +71,7 @@ def settings():
     form = forms.create_prefs_form()
     if form.validate_on_submit():
         form.populate_obj(util.AttributeWrapper(app.config))
-        util.save_config(app.config, CONFIG_FILE)
+        util.save_config(app.config, CONFIG_PATH)
         warning = library.check()
         if warning:
             flash(warning, "error")
