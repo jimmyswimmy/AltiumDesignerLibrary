@@ -104,8 +104,8 @@ class SVNLibrary(ThreadWorker):
                 indices.append(dict(zip(base_names, file_paths)))
             self.sym_index, self.ftpt_index = indices
         except Exception, e:
-            import traceback, sys
-            traceback.print_exc(file=sys.stderr)
+            #import traceback, sys
+            #traceback.print_exc(file=sys.stderr)
             self.sym_index, self.ftpt_index = ({},{})
             if not silent:
                 raise e
