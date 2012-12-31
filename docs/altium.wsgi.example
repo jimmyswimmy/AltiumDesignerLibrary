@@ -1,0 +1,14 @@
+# activate virtualenv
+activate_this = r'C:\server\apps\AltiumDesignerLibrary\env\Scripts\activate_this.py'
+execfile(activate_this, dict(__file__=activate_this))
+
+# setup python path
+import sys
+sys.path.insert(0, r'C:\server\apps\AltiumDesignerLibrary')
+
+import os
+os.environ['ALTIUM_DESIGNER_LIBRARY_SETTINGS'] = 'C:\\server\\apps\\AltiumDesignerLibrary\\settings.cfg'
+
+# import application
+from altium import app as application
+
