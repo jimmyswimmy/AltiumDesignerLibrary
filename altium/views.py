@@ -139,15 +139,15 @@ def _import():
         print e
 
     # Entry point:  When in doubt: Stage 1.
-    stage = session.get('stage', 1)
+    try: stage = int(request.form['stage'])
+    except Exception, e:
+        stage = 1
     if request.method == 'GET':
         stage = 1
-        g.import_data = None
 
     # Stage 2: We have a file from the user
     if stage == 2:
         _file = request.files['file']
-
         # Parse the file as a CSV
         try:
             data = get_file_dataset(_file)
@@ -173,23 +173,70 @@ def _import():
             flash('The imported file columns do not match the columns of this table. At least one column in the imported file must be present in the target table to perform an import.', 'error')
             return render_template('import_1.html', table=name, tables=models.components.keys())
         if len(db_columns_not_in_import) > 1:
-            flash('Imported file does not have all the columns that this table does.  Some columns will be filled with default values.')
+            flash('Imported file does not have all the columns that this table does.  (It is missing %d columns) Some columns will be filled with default values.' % len(db_columns_not_in_import))
         if len(import_columns_not_in_db) > 0:
-            flash('Imported file has columns that do not appear in this table. Data from these columns were not imported.', 'warning')
+            flash('Imported file has columns that do not appear in this table. (It has %d extra columns)  Data from these columns were not imported.' % len(import_columns_not_in_db), 'warning')
         
         # Pull all the parts that need updating from the database
-        parts = db.session.query(c).filter(c.uuid.in_(import_uuids)).all()
-        db_uuids = set([part.uuid for part in parts])
-        uuid_idx = data.headers.index('uuid')
+        parts_to_update = db.session.query(c).filter(c.uuid.in_(import_uuids)).all() # component objects that already exist in the db
+        db_uuids = set([part.uuid for part in parts_to_update])
+        
+        # add a 'status' column that indicates whether we're creating new data or changing existing data
+        uuid_idx = data.headers.index('uuid') 
         data.append_col(lambda row : row[uuid_idx] in db_uuids, header="status")
         
-        # data is
-        g.import_data = data        
+        # save data in a way that will pickle with the session (skirting a bug in tablib)
+        session['import_headers'] = data.headers
+        data.headers = []
+        session['import_dict'] = data.dict
+        data.headers = session['import_headers']
+        
+        # Save all the uuids as their own list, for convenience
+        session['import_uuids'] = import_uuids
         
         return render_template('import_2.html', table=name, tables=models.components.keys(), data=data)
+    elif stage == 3:
+        Component = models.components[name]
+
+        import_uuids = session['import_uuids']
+        import_data = tablib.Dataset(*session['import_dict'], headers=session['import_headers'])
+        
+        parts_to_update = db.session.query(Component).filter(Component.uuid.in_(import_uuids)).all()
+        db_uuids = set([part.uuid for part in parts_to_update])
+        new_uuids = set(import_uuids) - set(db_uuids)
+                
+        # Create new parts
+        for uuid in new_uuids:
+            idx = import_data['uuid'].index(uuid)
+            row = import_data[idx]  # The row of data we wish to install
+            c = Component()
+            for key,value in zip(import_data.headers, row):
+                if key != 'status' and key in Component.properties:
+                    setattr(c, key, value)
+            db.session.add(c) # Add to session to insert
+
+        for part in parts_to_update:
+            uuid = part.uuid        
+            idx = import_data['uuid'].index(uuid)
+            row = import_data[idx]  # The row of data we wish to update
+            for key,value in zip(import_data.headers, row):
+                if key != 'status' and key in Component.properties:
+                    setattr(part, key, value)
+            
+        db.session.commit()
+
+        message = 'Component database was updated.  '
+        if new_uuids:
+            message += '%d components were added.  ' % len(new_uuids)
+        if db_uuids:
+            message += '%d components were updated.  ' % len(db_uuids)
+        
+        flash(message , 'success')
+        
+        return redirect(url_for('table', name=name))
+        
     else:
         # finally:
-        session['stage'] = 2
         return render_template('import_1.html', table=name, tables=models.components.keys())
 
 @app.route('/edit', methods=['GET','POST'])
@@ -229,7 +276,7 @@ def new():
         component.uuid = str(uuid.uuid4())
         db.session.add(component)
         db.session.commit()
-        flash("The new component was created successfully.", "success")
+        flash('The new component was created successfully.', 'success')
         return redirect(url_for('table', name=name))
     return render_template('edit.html',  tables = models.components.keys(), form=form, sch=library.sym, ftpt=library.ftpt)
 

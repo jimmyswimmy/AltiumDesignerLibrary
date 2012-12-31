@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <form method="post" action="{{url_for('_import')}}" enctype="multipart/form-data">    
+<input type="hidden" name="stage" value="2" />
 <div class="row-fluid bottom-row">
 	<div class="span10">
 	<h3>Import Step 1: Choose a File</h3>

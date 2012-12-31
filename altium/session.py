@@ -132,7 +132,8 @@ class SqliteSessionInterface(SessionInterface):
         domain = self.get_cookie_domain(app)
         if not session:
             try:
-                os.unlink(session.path)
+                pass
+                #os.unlink(session.path)
             except OSError, e:
                 if e.errno != errno.ENOENT:
                     raise

@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
+<form method="post" action="{{url_for('_import')}}">    
+<input type="hidden" name="name" value="{{table}}" />
+<input type="hidden" name="stage" value="3" />
 <div class="row-fluid bottom-row">
 	<div class="span10">
 		<h3>Import Step 2: Review Updates</h3>
@@ -7,11 +10,11 @@
 		<p><span class="badge badge-success">Create</span> Means a new component will be added to the database.</p>
 		<p><span class="badge badge-warning">Update</span> Means an existing component will be updated with new data from the import.</p>
 	</div>
-	<div class="span2 offset10 bottom-span">
-		<a class="btn btn-info btn-large pull-right">Next <i class="icon-chevron-right icon-white"></i></a>
+	<div class="span3 offset9 bottom-span">
+		<button class="btn btn-info btn-large pull-right" type="submit">Commit to Database <i class="icon-chevron-right icon-white"></i></button>
 	</div>
 </div>
-
+</form>
 <table class="table table-bordered table-striped component-table">
     <tr>
         {% for header in data.headers %}
