@@ -20,7 +20,7 @@ def get_table_data(name, order_by=None):
     for field in models.HIDDEN_FIELDS:
         properties.remove(field)
     headers = [(True if prop in order_by else False, prop) for prop in properties]
-    rows = [(x.id, x.uuid, [getattr(x, field) for field in properties]) for x in component.query.order_by(' '.join(order_by)).all()]
+    rows = [(x.id, x.uuid, [getattr(x, field) or '' for field in properties]) for x in component.query.order_by(' '.join(order_by)).all()]
     return headers, rows
 
 def get_table_dataset(name, order_by=None):
@@ -82,7 +82,7 @@ def settings():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    tables = models.components.keys()
+    tables = sorted(models.components.keys())
     info = {'svn_ok' : bool(library.sym) and bool(library.ftpt), 'db_ok' : models.ok}
     info.update({'syms' : len(library.sym), 'ftpts' : len(library.ftpt)})
     info.update({'db_tables' : len(tables)})
@@ -159,10 +159,16 @@ def _import():
         try:
             import_uuids = data['uuid']
         except KeyError, e:
-            msg = str(e)
-            flash('The uploaded file does not contain a uuid column.', 'error')
-            return render_template('import_1.html', table=name, tables=models.components.keys())
-            
+            try:
+                import uuid
+                # Create uuid for all data in the absence of one
+                data.append_col([str(uuid.uuid4()) for row in data], header='uuid')
+                import_uuids = data['uuid']
+                flash('The imported data contains no uuid column.  New uuids will be created.', 'info')
+            except Exception, e:
+                flash(str(e), 'error')
+                return render_template('import_1.html', table=name, tables=models.components.keys())
+
         # Compare columns in the imported dataset with columns in the table and make sure they look sane
         c = models.components[name]
         import_columns_not_in_db = set(data.headers) - set(c.properties)
@@ -184,7 +190,10 @@ def _import():
         # add a 'status' column that indicates whether we're creating new data or changing existing data
         uuid_idx = data.headers.index('uuid') 
         data.append_col(lambda row : row[uuid_idx] in db_uuids, header="status")
-        
+       
+        for col in import_columns_not_in_db:
+            del data[col]
+
         # save data in a way that will pickle with the session (skirting a bug in tablib)
         session['import_headers'] = data.headers
         data.headers = []
