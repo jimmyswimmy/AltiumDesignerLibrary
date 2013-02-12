@@ -19,7 +19,7 @@
 	
 	<form class="form-search pull-right" action="{{url_for('search')}}">
     	<div class="input-append">
-    		<input name="query" type="text" class="span2 search-query" />
+    		<input name="query" type="text" class="search-query input-xlarge" onfocus="this.select()" />
     		<input name="table" type="hidden" value="{{name}}" />
     		<button type="submit" class="btn">Search</button>
     	</div>
