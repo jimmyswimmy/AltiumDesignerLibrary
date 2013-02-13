@@ -26,3 +26,11 @@ body {
 	padding-right: 40px;
 	padding-bottom: 10px;
 }
+
+th {
+	white-space: nowrap;
+}
+
+table {
+	max-width: none;
+}
