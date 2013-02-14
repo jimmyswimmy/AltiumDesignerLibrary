@@ -25,6 +25,29 @@
     	</div>
     </form>
 </div>
+  
+<script>
+  function confirmDelete(url) {
+    $("#dialog-confirm" ).dialog({
+      resizable: false,
+      height:300,
+      modal: true,
+      buttons: {
+        "Delete Part": function() {
+          $( this ).dialog( "close" );
+          window.location = url;
+        },
+        "Cancel" : function() {
+          $( this ).dialog( "close" );
+        }
+      }
+    });
+  }
+  </script>
+
+<div id="dialog-confirm" style="display:none;" title="Delete this part?">
+  <p>This part will be permanently removed from the database.  Are you sure?</p>
+</div>
 
 <table class="table table-bordered table-striped component-table">
     <tr>
@@ -43,7 +66,7 @@
     {% for id, uuid, row in data %}
     <tr>
         <td class="action-cell">
-            <a href="{{url_for('delete', name=name, id=id)}}"><img src="{{static('images/cross.png')}}" title="Delete" alt="Delete"></a>
+            <img src="{{static('images/cross.png')}}" title="Delete" alt="Delete" onclick="confirmDelete('{{url_for('delete', name=name, id=id)}}');">
             <a href="{{url_for('edit', name=name, id=id)}}"><img src="{{static('images/page_white_edit.png')}}" title="Edit" alt="Edit"></a>
             <a href="{{url_for('new', name=name, template=id)}}"><img src="{{static('images/page_white_copy.png')}}" title="Duplicate" alt="Duplicate"></a>
         </td>

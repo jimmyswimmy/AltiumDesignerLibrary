@@ -297,6 +297,7 @@ def delete():
     component = Component.query.get(_id)
     db.session.delete(component)
     db.session.commit()
+    flash('The component was deleted successfully', 'success')
     return redirect(url_for('table', name=name))
 
 @app.route('/symbols', methods=['GET'])
