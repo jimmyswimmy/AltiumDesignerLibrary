@@ -6,6 +6,7 @@ import re, uuid
 import forms
 import models
 import util
+import tempfile, zipfile, StringIO
 
 
 def get_table_data(name, order_by=None):
@@ -30,6 +31,13 @@ def get_table_dataset(name, order_by=None):
     for _id, uuid, fields in rows:
         data.append([uuid] + list(fields))
     return data
+
+def get_database_zip():
+    fp = StringIO.StringIO()
+    with zipfile.ZipFile(fp, 'w') as z:
+        for table in models.components.keys():
+            z.writestr(table + '.csv', get_table_dataset(table).csv)
+    return fp.getvalue()
 
 def get_file_dataset(_file):
         reader = csv.reader(_file)
@@ -113,19 +121,26 @@ def search():
 def export():
     table = request.args.get('name', '')
     _format = request.args.get('format', 'json')
-    data = get_table_dataset(table)
     
-    if _format == 'json':
-        exported_data = data.json
-        content_type = 'application/json'        
-    elif _format == 'xls':
-        exported_data = data.xls
-        content_type = 'application/vnd.ms-excel'
-    elif _format == 'csv':
-        exported_data = data.csv
-        content_type = 'text/csv'
+    if not table:
+        table='adl_export'
+        exported_data = get_database_zip()
+        content_type = 'application/zip'
+        _format = 'zip'
     else:
-        raise Exception("Invalid format '%s'" % _format)
+        data = get_table_dataset(table)
+        
+        if _format == 'json':
+            exported_data = data.json
+            content_type = 'application/json'        
+        elif _format == 'xls':
+            exported_data = data.xls
+            content_type = 'application/vnd.ms-excel'
+        elif _format == 'csv':
+            exported_data = data.csv
+            content_type = 'text/csv'
+        else:
+            raise Exception("Invalid format '%s'" % _format)
     
     # Export in appropriate format    
     response = make_response(exported_data)
