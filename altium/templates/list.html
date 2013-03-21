@@ -4,14 +4,14 @@
 	<table class="table">
 	<tr>
 		<th>Name</th>
+		<th>Author</th>
 		<th>Size</th>
-		<th>Last Modified</th>
 	</tr>
-	{% for name in names %}
+	{% for name, info in data.items() %}
 	<tr>
 		<td><a href="{{url_for('get_file', name=name, type=type)}}">{{name}}</a></td>
-		<td>Size</td>
-		<td>Last Modified</td>
+		<td>{{info['author']}}</td>
+		<td>{{sizeof(info['size'])}}</td>
 	</tr>
 	{% endfor %}
 	</table>

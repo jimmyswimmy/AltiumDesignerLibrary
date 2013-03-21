@@ -60,7 +60,7 @@ def search_table(table, query, order_by=None):
     results = results.distinct()
         
     headers = [(True if prop in order_by else False, prop) for prop in properties]
-    rows = [(x.id, x.uuid, [getattr(x, field) for field in properties]) for x in results.order_by(' '.join(order_by)).all()]
+    rows = [(x.id, x.uuid, [getattr(x, field) or '' for field in properties]) for x in results.order_by(' '.join(order_by)).all()]
     
     return headers, rows
     
@@ -102,7 +102,12 @@ def search():
     table = request.args.get('table', '')
     query = request.args.get('query', '')
     headers, rows = search_table(table, query)
-    return render_template('search_results.html', tables = models.components.keys(), headers=headers , data=rows, name=table)
+    if rows:
+        #flash('Search returned %d results.' % len(rows), 'success')
+        return render_template('search_results.html', tables = models.components.keys(), headers=headers , data=rows, name=table)
+    else:
+        flash('No search results were returned.', 'warning')
+        return redirect(url_for('table', name=table))
 
 @app.route('/export', methods=['GET','POST'])
 def export():
@@ -302,11 +307,11 @@ def delete():
 
 @app.route('/symbols', methods=['GET'])
 def symbols():
-    return render_template('list.html', tables = models.components.keys(), names=library.sym, type='symbol')
+    return render_template('list.html', tables = models.components.keys(), data=library.sym_index, type='symbol')
 
 @app.route('/footprints', methods=['GET'])
 def footprints():
-    return render_template('list.html', tables = models.components.keys(), names=library.ftpt, type='footprint')
+    return render_template('list.html', tables = models.components.keys(), data=library.ftpt_index, type='footprint')
 
 @app.route('/get_file', methods=['GET'])
 def get_file():

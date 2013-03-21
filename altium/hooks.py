@@ -13,6 +13,13 @@ def static(path):
 def table_image(table):
     return static('images/%s.jpg' % table)
 
+def sizeof(num):
+    for x in ('bytes','kB','MB','GB','TB'):
+        if num < 1024.0:
+            return "%3.1f %s" % (num, x)
+        num /= 1024.0
+    return "Real Big"
+
 @app.context_processor
 def context_processor():
-    return dict(static=static, table_image=table_image, prettify=prettify, zip=zip)
+    return dict(static=static, table_image=table_image, prettify=prettify, zip=zip, sizeof=sizeof)

@@ -103,29 +103,36 @@ class SVNLibrary(ThreadWorker):
             indices = []
             for path, ext in [(sym_path, '.schlib'), (ftpt_path, '.pcblib')]:
                 all_paths = svn_client.list(url + path)
-                file_paths = [entry[0].data['path'] for entry in all_paths if entry[0].data['kind'] == pysvn.node_kind.file and entry[0].data['path'].lower().endswith(ext)]
+                file_objects = filter(lambda x : x[0].data['kind'] == pysvn.node_kind.file and x[0].data['path'].lower().endswith(ext), all_paths) 
+                file_paths = [entry[0].data['path'] for entry in file_objects]
+                last_authors = [entry[0].data['last_author'] for entry in file_objects]
+                file_sizes = [entry[0].data['size'] for entry in file_objects]
                 file_names = [os.path.split(s)[1] for s in file_paths]
                 base_names = [os.path.splitext(s)[0] for s in file_names]
-                indices.append(dict(zip(base_names, file_paths)))
+                index = {}
+                for name, path, author, size in zip(base_names, file_paths, last_authors, file_sizes):
+                    index[name] = {'path': path, 'author':author, 'size':size}
+                indices.append(index)
             self.sym_index, self.ftpt_index = indices
+            
         except Exception, e:
             #import traceback, sys
             #traceback.print_exc(file=sys.stderr)
             self.sym_index, self.ftpt_index = ({},{})
             if not silent:
                 raise e
-    
+        
     def get_symbol_file(self, name):
         import pysvn
         svn_client = pysvn.Client()
-        fullpath = self.sym_index[name]
+        fullpath = self.sym_index[name]['path']
         filename = fullpath.split('/')[-1]
         return filename, svn_client.cat(fullpath)
     
     def get_footprint_file(self, name):
         import pysvn
         svn_client = pysvn.Client()
-        fullpath = self.ftpt_index[name]
+        fullpath = self.ftpt_index[name]['path']
         filename = fullpath.split('/')[-1]
         return filename, svn_client.cat(fullpath)
         

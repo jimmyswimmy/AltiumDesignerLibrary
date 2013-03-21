@@ -28,25 +28,28 @@
   
 <script>
   function confirmDelete(url) {
-    $("#dialog-confirm" ).dialog({
-      resizable: false,
-      height:300,
-      modal: true,
-      buttons: {
-        "Delete Part": function() {
-          $( this ).dialog( "close" );
-          window.location = url;
-        },
-        "Cancel" : function() {
-          $( this ).dialog( "close" );
-        }
-      }
+    $("#dialog-confirm-delete-btn-ok").click(function() {
+        $("#dialog-confirm-delete" ).modal('hide');        
+        window.location = url;
     });
+    $("#dialog-confirm-delete" ).modal();
   }
   </script>
 
-<div id="dialog-confirm" style="display:none;" title="Delete this part?">
-  <p>This part will be permanently removed from the database.  Are you sure?</p>
+<div class="modal hide fade" id="dialog-confirm-delete" role="dialog" aria-labelledby="dialog-confirm-delete-label" aria-hidden="true">
+	<div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<h3 style="color: red;">Warning!</h3>
+	</div>
+	<div class="modal-body">
+		<p>
+		You are about to delete a component. Are you sure?
+		</p>
+	</div>
+	<div class="modal-footer">
+		<a href="#" class="btn" id="dialog-confirm-delete-btn-cancel" data-dismiss="modal">No</a>
+		<a href="#" class="btn btn-danger" id="dialog-confirm-delete-btn-ok">Yes, Delete it.</a>
+	</div>
 </div>
 
 <table class="table table-bordered table-striped component-table">
