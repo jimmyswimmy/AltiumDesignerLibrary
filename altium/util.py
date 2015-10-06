@@ -2,7 +2,8 @@ import threading
 import os
 import time
 import datetime
-
+import svn.remote
+import tempfile
 
 def total_seconds(td):
     return td.days * 60 * 60 * 24 + td.seconds
@@ -67,6 +68,9 @@ class ThreadWorker(threading.Thread):
 class SVNLibrary(ThreadWorker):
     def __init__(self, update_rate=5.0):
         super(SVNLibrary, self).__init__(self.continuous_update, update_rate)
+        self.svn_url = None
+        self.svn_sym_path = None
+        self.svn_ftpt_path = None
         self.sym_index = {}
         self.ftpt_index = {}
         if update_rate:
@@ -90,23 +94,42 @@ class SVNLibrary(ThreadWorker):
             self.update(silent=False)
             return None
         except Exception, e:
+            raise e
             return str(e)
             
-    def update(self, silent=True):
+    def update_svn(self):
         from altium import app
         url = app.config['ALTIUM_SVN_URL']
         sym_path = app.config['ALTIUM_SYM_PATH']
         ftpt_path = app.config['ALTIUM_FTPT_PATH']
+        if (self.svn_url != url) or (self.svn_sym_path != sym_path) or (self.svn_ftpt_path != ftpt_path):
+            print "Checking out fresh SVN repository"
+            r = svn.remote.RemoteClient(url)
+            self.tmp_dir = tempfile.mkdtemp()
+            r.checkout(self.tmp_dir)
+            self.svn_repos = r
+            self.svn_url = url
+            self.svn_sym_path = sym_path
+            self.svn_ftpt_path = ftpt_path
+            return r
+        else:
+            print "Updating cached SVN repository"
+            self.svn_repos.run_command('update',[self.tmp_dir], return_binary=True)
+            return self.svn_repos
+
+    def update(self, silent=True):
+        from altium import app
+        sym_path = app.config['ALTIUM_SYM_PATH']
+        ftpt_path = app.config['ALTIUM_FTPT_PATH']
+        repos = self.update_svn()
         try:
-            import pysvn
-            svn_client = pysvn.Client()
             indices = []
             for path, ext in [(sym_path, '.schlib'), (ftpt_path, '.pcblib')]:
-                all_paths = svn_client.list(url + path)
-                file_objects = filter(lambda x : x[0].data['kind'] == pysvn.node_kind.file and x[0].data['path'].lower().endswith(ext), all_paths) 
-                file_paths = [entry[0].data['path'] for entry in file_objects]
-                last_authors = [entry[0].data['last_author'] for entry in file_objects]
-                file_sizes = [entry[0].data['size'] for entry in file_objects]
+                all_paths = list(repos.list(extended=True, rel_path=path))
+                file_objects = filter(lambda x : x['kind'] == 'file' and x['name'].lower().endswith(ext), all_paths)
+                file_paths = [os.path.join(path, entry['name']) for entry in file_objects]
+                last_authors = [entry['author'] for entry in file_objects]
+                file_sizes = [entry['size'] for entry in file_objects]
                 file_names = [os.path.split(s)[1] for s in file_paths]
                 base_names = [os.path.splitext(s)[0] for s in file_names]
                 index = {}
@@ -114,25 +137,24 @@ class SVNLibrary(ThreadWorker):
                     index[name] = {'path': path, 'author':author, 'size':size}
                 indices.append(index)
             self.sym_index, self.ftpt_index = indices
-            
         except Exception, e:
-            #import traceback, sys
-            #traceback.print_exc(file=sys.stderr)
+            import traceback, sys
+            traceback.print_exc(file=sys.stderr)
             self.sym_index, self.ftpt_index = ({},{})
             if not silent:
                 raise e
-        
+
     def get_symbol_file(self, name):
-        import pysvn
-        svn_client = pysvn.Client()
         fullpath = self.sym_index[name]['path']
         filename = fullpath.split('/')[-1]
-        return filename, svn_client.cat(fullpath)
+        return filename, self.svn_repos.cat(fullpath)
     
     def get_footprint_file(self, name):
-        import pysvn
         svn_client = pysvn.Client()
         fullpath = self.ftpt_index[name]['path']
         filename = fullpath.split('/')[-1]
-        return filename, svn_client.cat(fullpath)
+        return filename, self.svn_repos.cat(fullpath)
         
+if __name__ == "__main__":
+    s = SVNLibrary(update_rate=None)
+    s.check()
