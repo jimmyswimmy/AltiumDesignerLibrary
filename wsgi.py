@@ -1,5 +1,1 @@
-from altium import app
-
-if __name__ == "__main__":
-    app.run()
-
+from altium import app as application
