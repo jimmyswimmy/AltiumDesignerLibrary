@@ -66,7 +66,7 @@ class ThreadWorker(threading.Thread):
             print "Exception in ThreadWorker: %s" % e
 
 class SVNLibrary(ThreadWorker):
-    def __init__(self, update_rate=5.0):
+    def __init__(self, update_rate=10.0):
         super(SVNLibrary, self).__init__(self.continuous_update, update_rate)
         self.svn_url = None
         self.svn_sym_path = None
@@ -94,7 +94,6 @@ class SVNLibrary(ThreadWorker):
             self.update(silent=False)
             return None
         except Exception, e:
-            raise e
             return str(e)
             
     def update_svn(self):
@@ -103,9 +102,9 @@ class SVNLibrary(ThreadWorker):
         sym_path = app.config['ALTIUM_SYM_PATH']
         ftpt_path = app.config['ALTIUM_FTPT_PATH']
         if (self.svn_url != url) or (self.svn_sym_path != sym_path) or (self.svn_ftpt_path != ftpt_path):
-            print "Checking out fresh SVN repository"
-            r = svn.remote.RemoteClient(url)
             self.tmp_dir = tempfile.mkdtemp()
+            print "Checking SVN repository %s into %s" % (url,self.tmp_dir) 
+            r = svn.remote.RemoteClient(url)
             r.checkout(self.tmp_dir)
             self.svn_repos = r
             self.svn_url = url
@@ -121,8 +120,8 @@ class SVNLibrary(ThreadWorker):
         from altium import app
         sym_path = app.config['ALTIUM_SYM_PATH']
         ftpt_path = app.config['ALTIUM_FTPT_PATH']
-        repos = self.update_svn()
         try:
+            repos = self.update_svn()
             indices = []
             for path, ext in [(sym_path, '.schlib'), (ftpt_path, '.pcblib')]:
                 all_paths = list(repos.list(extended=True, rel_path=path))

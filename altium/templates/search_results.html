@@ -28,12 +28,12 @@
         </th>
         {% endfor %}
     </tr>
-    {% for id, uuid, row in data %}
+    {% for uuid, row in data %}
     <tr>
         <td class="action-cell">
-            <a href="{{url_for('delete', name=name, id=id)}}"><img src="{{static('images/cross.png')}}" title="Delete" alt="Delete"></a>
-            <a href="{{url_for('edit', name=name, id=id)}}"><img src="{{static('images/page_white_edit.png')}}" title="Edit" alt="Edit"></a>
-            <a href="{{url_for('new', name=name, template=id)}}"><img src="{{static('images/page_white_copy.png')}}" title="Duplicate" alt="Duplicate"></a>
+            <a href="{{url_for('delete', name=name, uuid=uuid)}}"><img src="{{static('images/cross.png')}}" title="Delete" alt="Delete"></a>
+            <a href="{{url_for('edit', name=name, uuid=uuid)}}"><img src="{{static('images/page_white_edit.png')}}" title="Edit" alt="Edit"></a>
+            <a href="{{url_for('new', name=name, template=uuid)}}"><img src="{{static('images/page_white_copy.png')}}" title="Duplicate" alt="Duplicate"></a>
         </td>
         {% for cell, (order_by, header) in zip(row, headers) %}
         <td>

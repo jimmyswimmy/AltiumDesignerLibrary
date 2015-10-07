@@ -13,22 +13,27 @@ def get_table_data(name, order_by=None):
     '''
     Return a 2-tuple of header and table row data:
     header = [(order_by, header),]
-    row = [(id, uuid,  [col1,col2...coln]),]
+    row = [(uuid,  [col1,col2...coln]),]
     ''' 
     component = models.components[name]
     properties = sorted(component.properties)
     order_by = order_by or []
     for field in models.HIDDEN_FIELDS:
-        properties.remove(field)
+        try:
+            properties.remove(field)
+        except ValueError, e:
+            print field
+            print e
+
     headers = [(True if prop in order_by else False, prop) for prop in properties]
-    rows = [(x.id, x.uuid, [getattr(x, field) or '' for field in properties]) for x in component.query.order_by(' '.join(order_by)).all()]
+    rows = [(x.uuid, [getattr(x, field) or '' for field in properties]) for x in component.query.order_by(' '.join(order_by)).all()]
     return headers, rows
 
 def get_table_dataset(name, order_by=None):
     headers, rows = get_table_data(name)
     order_by, headers = zip(*headers)
     data = tablib.Dataset(headers=['uuid'] + list(headers))
-    for _id, uuid, fields in rows:
+    for uuid, fields in rows:
         data.append([uuid] + list(fields))
     return data
 
@@ -68,7 +73,7 @@ def search_table(table, query, order_by=None):
     results = results.distinct()
         
     headers = [(True if prop in order_by else False, prop) for prop in properties]
-    rows = [(x.id, x.uuid, [getattr(x, field) or '' for field in properties]) for x in results.order_by(' '.join(order_by)).all()]
+    rows = [(x.uuid, [getattr(x, field) or '' for field in properties]) for x in results.order_by(' '.join(order_by)).all()]
     
     return headers, rows
     
@@ -271,7 +276,7 @@ def _import():
 @app.route('/edit', methods=['GET','POST'])
 def edit():
     name = request.args['name']
-    _id = int(request.args['id'])
+    _id = request.args['uuid']
     Component = models.components[name]
     Form = forms.create_component_form(Component)
     form = Form()
@@ -312,7 +317,7 @@ def new():
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
     name = request.args['name']
-    _id = int(request.args['id'])
+    _id = request.args['uuid']
     Component = models.components[name]
     component = Component.query.get(_id)
     db.session.delete(component)
