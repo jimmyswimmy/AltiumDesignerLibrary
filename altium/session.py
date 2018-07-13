@@ -1,5 +1,5 @@
 import os, errno, sqlite3
-from cPickle import dumps, loads
+from pickle import dumps, loads
 from collections import MutableMapping
 from flask.sessions import SessionInterface, SessionMixin
 import hashlib, uuid
@@ -134,7 +134,7 @@ class SqliteSessionInterface(SessionInterface):
             try:
                 pass
                 #os.unlink(session.path)
-            except OSError, e:
+            except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise
             if session.modified:

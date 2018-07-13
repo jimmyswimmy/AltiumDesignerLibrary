@@ -1,11 +1,11 @@
 from flask import request, make_response
 from altium import app
-import models
+from . import models
 
 @app.route('/api/parts/get', methods=['GET'])
 # Get part by uuid
 def parts_get():
-    tables = models.components.keys()
+    tables = list(models.components.keys())
     _format = request.args.get('format', 'json')
     data = get_table_dataset(table)
     

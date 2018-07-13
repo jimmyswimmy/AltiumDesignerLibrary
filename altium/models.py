@@ -19,11 +19,11 @@ def create():
         # Model generation happens here.
         # A new model class is created for each table in the database.
         # All the models are stored in the 'components' dictionary, which the rest of the application uses as the overall model.
-        for name, table in meta.tables.items():
-            cls = type(str(name), (db.Model, object), {'__table__' : table,'properties' : table.c.keys()})
+        for name, table in list(meta.tables.items()):
+            cls = type(str(name), (db.Model, object), {'__table__' : table, 'properties' : list(table.c.keys())})
             components[name] = cls
         ok = True
-    except Exception, e:
+    except Exception as e:
         ok = False
-        print e
+        print(e)
     
