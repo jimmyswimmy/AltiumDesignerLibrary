@@ -4,14 +4,16 @@ A simple web-frontend for managing components in Altium Designer.  This is for y
 
 ## Dependencies
 
-    pip install Flask
-    pip install Flask-SQLAlchemy
-    pip install Flask-WTF
+    pip install < requirements.txt
+    Maybe a running postgres server? Should not be necessary
+    An SVN server
 
 ## Running
 
     python main.py
 
 ## Credits
+
+Thanks to Ryan Sturmer who wrote the original application.
 
 Thanks to Michael Fogleman of http://michaelfogleman.com who developed the HelloFlask starting point from which this application is derived.
