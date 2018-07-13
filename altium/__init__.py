@@ -1,8 +1,8 @@
 import os, datetime
 from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy
-from session import SqliteSessionInterface
-import util
+from flask_sqlalchemy import SQLAlchemy
+from .sqlite_session_interface import SqliteSessionInterface
+from . import util
 
 CONFIG_FILE = 'altium.cfg'
 
@@ -28,9 +28,9 @@ library = util.SVNLibrary()
 db = SQLAlchemy(app)
 
     
-import hooks
-import models
+from . import hooks
+from . import models
 
 models.create()
 
-import views
+from . import views

@@ -1,8 +1,8 @@
-import urllib2
+import urllib.request
 from bs4 import BeautifulSoup
 
 def soup(url):
-    return BeautifulSoup(urllib2.urlopen(url).read())
+    return BeautifulSoup(urllib.request.urlopen(url).read())
 
 def make_digikey_url(part_number):
     pass

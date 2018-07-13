@@ -1,14 +1,14 @@
 from flask import url_for
 from altium import app
-import urlparse
-from util import prettify
+import urllib.parse
+from .util import prettify
 
 def static(path):
     root = app.config.get('STATIC_ROOT')
     if root is None:
         return url_for('static', filename=path)
     else:
-        return urlparse.urljoin(root, path)
+        return urllib.parse.urljoin(root, path)
 
 def table_image(table):
     return static('images/%s.jpg' % table)

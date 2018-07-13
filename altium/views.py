@@ -3,10 +3,10 @@ from altium import app, db, library, CONFIG_PATH
 import csv
 import tablib
 import re, uuid
-import forms
-import models
-import util
-import tempfile, zipfile, StringIO
+from . import forms
+from . import models
+from . import util
+import tempfile, zipfile, io
 
 
 def get_table_data(name, order_by=None):
@@ -21,9 +21,9 @@ def get_table_data(name, order_by=None):
     for field in models.HIDDEN_FIELDS:
         try:
             properties.remove(field)
-        except ValueError, e:
-            print field
-            print e
+        except ValueError as e:
+            print(field)
+            print(e)
 
     headers = [(True if prop in order_by else False, prop) for prop in properties]
     rows = [(x.uuid, [getattr(x, field) or '' for field in properties]) for x in component.query.order_by(' '.join(order_by)).all()]
@@ -31,22 +31,22 @@ def get_table_data(name, order_by=None):
 
 def get_table_dataset(name, order_by=None):
     headers, rows = get_table_data(name)
-    order_by, headers = zip(*headers)
+    order_by, headers = list(zip(*headers))
     data = tablib.Dataset(headers=['uuid'] + list(headers))
     for uuid, fields in rows:
         data.append([uuid] + list(fields))
     return data
 
 def get_database_zip():
-    fp = StringIO.StringIO()
+    fp = io.StringIO()
     with zipfile.ZipFile(fp, 'w') as z:
-        for table in models.components.keys():
+        for table in list(models.components.keys()):
             z.writestr(table + '.csv', get_table_dataset(table).csv)
     return fp.getvalue()
 
 def get_file_dataset(_file):
         reader = csv.reader(_file)
-        headers = reader.next()
+        headers = next(reader)
         data = tablib.Dataset(headers=headers)
         for row in reader:
             data.append(row)
@@ -62,7 +62,7 @@ def search_table(table, query, order_by=None):
     matches = pattern.findall(query)
     tokens = [a or b for a, b in matches]
     tokens = [token.replace('"', '').strip() for token in tokens]
-    tokens = filter(None, tokens) 
+    tokens = [_f for _f in tokens if _f] 
 
     results = component.query
     for token in tokens:
@@ -80,7 +80,7 @@ def search_table(table, query, order_by=None):
     
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
-    tables = models.components.keys()
+    tables = list(models.components.keys())
     form = forms.create_prefs_form()
     if form.validate_on_submit():
         form.populate_obj(util.AttributeWrapper(app.config))
@@ -108,7 +108,7 @@ def table():
     name = request.args['name']
     order_by = request.args.get('order_by', '')
     headers, rows = get_table_data(name, order_by=[order_by])
-    return render_template('table.html', tables = models.components.keys(), headers=headers , data=rows, name=name)
+    return render_template('table.html', tables = list(models.components.keys()), headers=headers , data=rows, name=name)
 
 @app.route('/search', methods=['GET','POST'])
 def search():
@@ -117,7 +117,7 @@ def search():
     headers, rows = search_table(table, query)
     if rows:
         #flash('Search returned %d results.' % len(rows), 'success')
-        return render_template('search_results.html', tables = models.components.keys(), headers=headers , data=rows, name=table)
+        return render_template('search_results.html', tables = list(models.components.keys()), headers=headers , data=rows, name=table)
     else:
         flash('No search results were returned.', 'warning')
         return redirect(url_for('table', name=table))
@@ -160,12 +160,12 @@ def _import():
         name = request.args.get('name', None)
         if not name:
             name = request.form['name']
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
 
     # Entry point:  When in doubt: Stage 1.
     try: stage = int(request.form['stage'])
-    except Exception, e:
+    except Exception as e:
         stage = 1
     if request.method == 'GET':
         stage = 1
@@ -176,23 +176,23 @@ def _import():
         # Parse the file as a CSV
         try:
             data = get_file_dataset(_file)
-        except Exception, e:
+        except Exception as e:
             msg = str(e)
             flash('There was an error parsing your file%s' % (': %s' % msg if msg else '.'), 'error')
         
         # Make sure the parts have uuids
         try:
             import_uuids = data['uuid']
-        except KeyError, e:
+        except KeyError as e:
             try:
                 import uuid
                 # Create uuid for all data in the absence of one
                 data.append_col([str(uuid.uuid4()) for row in data], header='uuid')
                 import_uuids = data['uuid']
                 flash('The imported data contains no uuid column.  New uuids will be created.', 'info')
-            except Exception, e:
+            except Exception as e:
                 flash(str(e), 'error')
-                return render_template('import_1.html', table=name, tables=models.components.keys())
+                return render_template('import_1.html', table=name, tables=list(models.components.keys()))
 
         # Compare columns in the imported dataset with columns in the table and make sure they look sane
         c = models.components[name]
@@ -202,7 +202,7 @@ def _import():
         # Warn the user about any discrepancies in the data
         if len(db_columns_not_in_import) == len(c.properties):
             flash('The imported file columns do not match the columns of this table. At least one column in the imported file must be present in the target table to perform an import.', 'error')
-            return render_template('import_1.html', table=name, tables=models.components.keys())
+            return render_template('import_1.html', table=name, tables=list(models.components.keys()))
         if len(db_columns_not_in_import) > 1:
             flash('Imported file does not have all the columns that this table does.  (It is missing %d columns) Some columns will be filled with default values.' % len(db_columns_not_in_import))
         if len(import_columns_not_in_db) > 0:
@@ -228,7 +228,7 @@ def _import():
         # Save all the uuids as their own list, for convenience
         session['import_uuids'] = import_uuids
         
-        return render_template('import_2.html', table=name, tables=models.components.keys(), data=data)
+        return render_template('import_2.html', table=name, tables=list(models.components.keys()), data=data)
     elif stage == 3:
         Component = models.components[name]
 
@@ -271,7 +271,7 @@ def _import():
         
     else:
         # finally:
-        return render_template('import_1.html', table=name, tables=models.components.keys())
+        return render_template('import_1.html', table=name, tables=list(models.components.keys()))
 
 @app.route('/edit', methods=['GET','POST'])
 def edit():
@@ -288,7 +288,7 @@ def edit():
         flash("The component was edited successfully.", "success")
         return redirect(url_for('table', name=name))
     form = Form(obj=component)
-    return render_template('edit.html',  tables = models.components.keys(), form=form, sch=library.sym, ftpt=library.ftpt)
+    return render_template('edit.html',  tables = list(models.components.keys()), form=form, sch=library.sym, ftpt=library.ftpt)
 
 @app.route('/new', methods=['GET','POST'])
 def new():
@@ -312,7 +312,7 @@ def new():
         db.session.commit()
         flash('The new component was created successfully.', 'success')
         return redirect(url_for('table', name=name))
-    return render_template('edit.html',  tables = models.components.keys(), form=form, sch=library.sym, ftpt=library.ftpt)
+    return render_template('edit.html',  tables = list(models.components.keys()), form=form, sch=library.sym, ftpt=library.ftpt)
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
@@ -327,11 +327,11 @@ def delete():
 
 @app.route('/symbols', methods=['GET'])
 def symbols():
-    return render_template('list.html', tables = models.components.keys(), data=library.sym_index, type='symbol')
+    return render_template('list.html', tables = list(models.components.keys()), data=library.sym_index, type='symbol')
 
 @app.route('/footprints', methods=['GET'])
 def footprints():
-    return render_template('list.html', tables = models.components.keys(), data=library.ftpt_index, type='footprint')
+    return render_template('list.html', tables = list(models.components.keys()), data=library.ftpt_index, type='footprint')
 
 @app.route('/get_file', methods=['GET'])
 def get_file():

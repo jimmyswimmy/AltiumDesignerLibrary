@@ -62,8 +62,8 @@ class ThreadWorker(threading.Thread):
     def run(self):
         try:
             self.func(*self.args, **self.kwargs)
-        except Exception, e:
-            print "Exception in ThreadWorker: %s" % e
+        except Exception as e:
+            print("Exception in ThreadWorker: %s" % e)
 
 class SVNLibrary(ThreadWorker):
     def __init__(self, update_rate=10.0):
@@ -93,7 +93,7 @@ class SVNLibrary(ThreadWorker):
         try:
             self.update(silent=False)
             return None
-        except Exception, e:
+        except Exception as e:
             return str(e)
             
     def update_svn(self):
@@ -103,7 +103,7 @@ class SVNLibrary(ThreadWorker):
         ftpt_path = app.config['ALTIUM_FTPT_PATH']
         if (self.svn_url != url) or (self.svn_sym_path != sym_path) or (self.svn_ftpt_path != ftpt_path):
             self.tmp_dir = tempfile.mkdtemp()
-            print "Checking SVN repository %s into %s" % (url,self.tmp_dir) 
+            print("Checking SVN repository %s into %s" % (url,self.tmp_dir))
             r = svn.remote.RemoteClient(url)
             r.checkout(self.tmp_dir)
             self.svn_repos = r
@@ -112,7 +112,7 @@ class SVNLibrary(ThreadWorker):
             self.svn_ftpt_path = ftpt_path
             return r
         else:
-            print "Updating cached SVN repository"
+            print("Updating cached SVN repository")
             self.svn_repos.run_command('update',[self.tmp_dir], return_binary=True)
             return self.svn_repos
 
@@ -136,7 +136,7 @@ class SVNLibrary(ThreadWorker):
                     index[name] = {'path': path, 'author':author, 'size':size}
                 indices.append(index)
             self.sym_index, self.ftpt_index = indices
-        except Exception, e:
+        except Exception as e:
             import traceback, sys
             traceback.print_exc(file=sys.stderr)
             self.sym_index, self.ftpt_index = ({},{})
