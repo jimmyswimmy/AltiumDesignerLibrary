@@ -1,5 +1,5 @@
 from wtforms import TextField, validators
-from flask_wtf import Form
+from flask_wtf import FlaskForm as Form
 from . import models
 from . import util
 
