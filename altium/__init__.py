@@ -12,6 +12,9 @@ app.config.from_object('altium.config')
 app.config.from_pyfile(CONFIG_PATH, silent=True)
 util.save_config(app.config, CONFIG_PATH)
 
+# track SQLAlchemy modifications
+if app.config['TRACK_SQLALCHEMY_MODS'] is not True:
+  app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Server-side sessions
 
 path = app.config['SESSION_PATH']                   
