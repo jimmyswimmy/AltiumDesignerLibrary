@@ -125,7 +125,7 @@ class SVNLibrary(ThreadWorker):
             indices = []
             for path, ext in [(sym_path, '.schlib'), (ftpt_path, '.pcblib')]:
                 all_paths = list(repos.list(extended=True, rel_path=path))
-                file_objects = filter(lambda x : x['kind'] == 'file' and x['name'].lower().endswith(ext), all_paths)
+                file_objects = list(filter(lambda x : x['kind'] == 'file' and x['name'].lower().endswith(ext), all_paths))
                 file_paths = [os.path.join(path, entry['name']) for entry in file_objects]
                 last_authors = [entry['author'] for entry in file_objects]
                 file_sizes = [entry['size'] for entry in file_objects]
