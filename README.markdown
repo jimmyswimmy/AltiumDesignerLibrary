@@ -10,7 +10,7 @@ A simple web-frontend for managing components in Altium Designer.  This is for y
 
 ## Running
 
-    python main.py
+    python3 main.py
 
 ## Credits
 
