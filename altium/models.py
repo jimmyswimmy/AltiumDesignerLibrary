@@ -2,7 +2,7 @@ from altium import db
 
 # These are fields that every table must have for the model to work properly,
 # but aren't fields that we generally want to display to the user.
-HIDDEN_FIELDS = ('uuid', 'id')
+HIDDEN_FIELDS = ['uuid', 'id']
 
 components = {}
 ok = False

@@ -11,7 +11,14 @@
 		</tr>
 		{% for table in tables %}
 			<tr>
-				<td><a href="{{url_for('table', name=table)}}">{{prettify(table)}}</a></td>
+				<td>
+                                    <div class="span1">
+                                        <img src="{{ table_image(table) }}" style="width: 70px;" />
+                                    </div>
+                                    <div class="span11">
+                                        <a href="{{url_for('table', name=table)}}">{{prettify(table)}}</a>
+                                    </div>
+                                </td>
 				<!--  <td>&nbsp;</td> -->
 			</tr>
 		{% endfor %}

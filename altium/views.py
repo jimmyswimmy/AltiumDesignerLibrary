@@ -56,8 +56,12 @@ def search_table(table, query, order_by=None):
     order_by = order_by or []
     component = models.components[table]
     properties = sorted(component.properties)
-    for field in models.HIDDEN_FIELDS:
-        properties.remove(field)
+    print(properties)
+    try:
+        for field in models.HIDDEN_FIELDS:
+            properties.remove(field)
+    except ValueError: # not in list
+        pass
     pattern = re.compile(r'(\"[^\"]+\")|([^\s\"]+)')
     matches = pattern.findall(query)
     tokens = [a or b for a, b in matches]
@@ -288,7 +292,7 @@ def edit():
         flash("The component was edited successfully.", "success")
         return redirect(url_for('table', name=name))
     form = Form(obj=component)
-    return render_template('edit.html',  tables = list(models.components.keys()), form=form, sch=library.sym, ftpt=library.ftpt)
+    return render_template('edit.html',  tables = list(models.components.keys()), form=form, sch=list(library.sym), ftpt=list(library.ftpt))
 
 @app.route('/new', methods=['GET','POST'])
 def new():
@@ -299,7 +303,7 @@ def new():
     # Pop the form with template data if this is a duplicate
     template = request.args.get('template', None)        
     if template:
-        template_component = Component.query.get(int(template))
+        template_component = Component.query.get(template)
         form = Form(obj=template_component)
     else:
         form = Form()
@@ -312,7 +316,7 @@ def new():
         db.session.commit()
         flash('The new component was created successfully.', 'success')
         return redirect(url_for('table', name=name))
-    return render_template('edit.html',  tables = list(models.components.keys()), form=form, sch=library.sym, ftpt=library.ftpt)
+    return render_template('edit.html',  tables = list(models.components.keys()), form=form, sch=list(library.sym), ftpt=list(library.ftpt))
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
