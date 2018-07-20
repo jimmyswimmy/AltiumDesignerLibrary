@@ -4,8 +4,8 @@ A simple web-frontend for managing components in Altium Designer.  This is for y
 
 ## Dependencies
 
-    pip install -r requirements.txt #this works better in pip 8.3... might be more reliable to mkvirtualenv
-    Maybe a running postgres server? Should not need to be postgres, but some backend is needed
+    pip install -r requirements.txt #this works better in pip < 10.0
+    Some database backend. Can be sqlite:///database.sqlite if the file is served to Altium too
     An SVN server
 
 ## Running
