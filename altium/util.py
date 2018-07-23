@@ -149,7 +149,6 @@ class SVNLibrary(ThreadWorker):
         return filename, self.svn_repos.cat(fullpath)
     
     def get_footprint_file(self, name):
-        svn_client = pysvn.Client()
         fullpath = self.ftpt_index[name]['path']
         filename = fullpath.split('/')[-1]
         return filename, self.svn_repos.cat(fullpath)

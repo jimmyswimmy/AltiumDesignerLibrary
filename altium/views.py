@@ -1,5 +1,6 @@
 from flask import flash, render_template, url_for, redirect, request, make_response, session, g
 from altium import app, db, library, CONFIG_PATH
+from sqlalchemy import text
 import csv
 import tablib
 import re, uuid
@@ -26,7 +27,7 @@ def get_table_data(name, order_by=None):
             print(e)
 
     headers = [(True if prop in order_by else False, prop) for prop in properties]
-    rows = [(x.uuid, [getattr(x, field) or '' for field in properties]) for x in component.query.order_by(' '.join(order_by)).all()]
+    rows = [(x.uuid, [getattr(x, field) or '' for field in properties]) for x in component.query.order_by(text(' '.join(order_by))).all()]
     return headers, rows
 
 def get_table_dataset(name, order_by=None):
@@ -283,8 +284,8 @@ def edit():
     _id = request.args['uuid']
     Component = models.components[name]
     Form = forms.create_component_form(Component)
-    form = Form()
     component = Component.query.get(_id)
+    form = Form()
     if form.validate_on_submit():
         form.populate_obj(component)
         db.session.add(component)
@@ -349,7 +350,7 @@ def get_file():
         return redirect(request.referrer)
     response = make_response(file_data)
     response.headers['Content-Type'] = 'application/octet-stream'
-    response.headers['Content-Disposition'] = 'attachment; filename=%s' % filename
+    response.headers['Content-Disposition'] = 'attachment; filename="%s"' % filename
     return response
     
         
