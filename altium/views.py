@@ -63,6 +63,8 @@ def search_table(table, query, order_by=None):
             properties.remove(field)
     except ValueError: # not in list
         pass
+    # create tokens from search query
+    # if "quoted terms" keep them together and remove quotes
     pattern = re.compile(r'(\"[^\"]+\")|([^\s\"]+)')
     matches = pattern.findall(query)
     tokens = [a or b for a, b in matches]
@@ -71,9 +73,9 @@ def search_table(table, query, order_by=None):
 
     results = component.query
     for token in tokens:
-        #ilike = '%%%s%%' % token
-        regex = r'\m%s\M' % token        
-        clauses = [getattr(component, p).op('~*')(regex) for p in properties]
+        ilike = '%%%s%%' % token
+        #regex = r'\m%s\M' % token        
+        clauses = [getattr(component, p).op('LIKE')(ilike) for p in properties]
         results = results.filter(db.or_(*clauses))
     results = results.distinct()
         
