@@ -39,7 +39,7 @@ def get_table_dataset(name, order_by=None):
     return data
 
 def get_database_zip():
-    fp = io.StringIO()
+    fp = io.BytesIO()
     with zipfile.ZipFile(fp, 'w') as z:
         for table in list(models.components.keys()):
             z.writestr(table + '.csv', get_table_dataset(table).csv)
