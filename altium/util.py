@@ -69,6 +69,8 @@ class SVNLibrary(ThreadWorker):
     def __init__(self, update_rate=10.0):
         super(SVNLibrary, self).__init__(self.continuous_update, update_rate)
         self.svn_url = None
+        self.svn_user = None
+        self.svn_pass = None
         self.svn_sym_path = None
         self.svn_ftpt_path = None
         self.sym_index = {}
@@ -99,12 +101,14 @@ class SVNLibrary(ThreadWorker):
     def update_svn(self):
         from altium import app
         url = app.config['ALTIUM_SVN_URL']
+        svn_user = app.config['ALTIUM_SVN_USER']
+        svn_pass = app.config['ALTIUM_SVN_PASS']
         sym_path = app.config['ALTIUM_SYM_PATH']
         ftpt_path = app.config['ALTIUM_FTPT_PATH']
         if (self.svn_url != url) or (self.svn_sym_path != sym_path) or (self.svn_ftpt_path != ftpt_path):
             self.tmp_dir = tempfile.mkdtemp()
             print("Checking SVN repository %s into %s" % (url,self.tmp_dir))
-            r = svn.remote.RemoteClient(url)
+            r = svn.remote.RemoteClient(url, username=svn_user, password=svn_pass)
             r.checkout(self.tmp_dir)
             self.svn_repos = r
             self.svn_url = url

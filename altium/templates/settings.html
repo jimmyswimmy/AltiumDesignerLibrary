@@ -5,6 +5,8 @@
     {{ form.hidden_tag() }}
 	<h2>SVN Settings</h2>
       {{ render_field(form.ALTIUM_SVN_URL, label=True) }}
+      {{ render_field(form.ALTIUM_SVN_USER, label=True) }}
+      {{ render_field(form.ALTIUM_SVN_PASS, label=True) }}
       {{ render_field(form.ALTIUM_SYM_PATH, label=True) }}
       {{ render_field(form.ALTIUM_FTPT_PATH, label=True) }}
     <h2>Database Settings</h2>

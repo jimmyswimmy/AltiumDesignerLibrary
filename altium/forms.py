@@ -1,4 +1,5 @@
-from wtforms import TextField, validators
+from wtforms import TextField, StringField, validators
+from wtforms.widgets import PasswordInput 
 from flask_wtf import FlaskForm as Form
 from . import models
 from . import util
@@ -12,6 +13,8 @@ def create_component_form(model):
 
 class PrefsForm(Form):
     ALTIUM_SVN_URL = TextField('SVN URL', validators=[validators.required()])
+    ALTIUM_SVN_USER = TextField('SVN Username')
+    ALTIUM_SVN_PASS = StringField('SVN Password', widget=PasswordInput(hide_value=False)) #I'm a bad person
     ALTIUM_SYM_PATH = TextField('SchLib Path', validators=[validators.required()])
     ALTIUM_FTPT_PATH = TextField('PcbLib Path', validators=[validators.required()])
     

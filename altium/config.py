@@ -8,6 +8,8 @@ SQLALCHEMY_DATABASE_URI = 'postgres://postgres:password@localhost/altium'
 STATIC_ROOT = None
 
 ALTIUM_SVN_URL = 'svn://localhost/database'
+ALTIUM_SVN_USER = 'user'
+ALTIUM_SVN_PASS = 'pass'
 
 ALTIUM_SYM_PATH = '/SYM'
 ALTIUM_FTPT_PATH = '/FTPT'
